@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-label="凤凰花">
+  <g transform="translate(24 24)">
+    <!-- 五瓣凤凰花（校花，橙红） -->
+    <g fill="#e8531f">
+      <ellipse cx="0" cy="-15" rx="6.4" ry="11"/>
+      <ellipse cx="14.3" cy="-4.6" rx="6.4" ry="11" transform="rotate(72)"/>
+      <ellipse cx="8.9" cy="12.1" rx="6.4" ry="11" transform="rotate(144)"/>
+      <ellipse cx="-8.9" cy="12.1" rx="6.4" ry="11" transform="rotate(216)"/>
+      <ellipse cx="-14.3" cy="-4.6" rx="6.4" ry="11" transform="rotate(288)"/>
+    </g>
+    <g fill="#c9390b" opacity=".35">
+      <ellipse cx="0" cy="-15" rx="2.6" ry="9"/>
+      <ellipse cx="14.3" cy="-4.6" rx="2.6" ry="9" transform="rotate(72)"/>
+      <ellipse cx="8.9" cy="12.1" rx="2.6" ry="9" transform="rotate(144)"/>
+      <ellipse cx="-8.9" cy="12.1" rx="2.6" ry="9" transform="rotate(216)"/>
+      <ellipse cx="-14.3" cy="-4.6" rx="2.6" ry="9" transform="rotate(288)"/>
+    </g>
+    <!-- 花蕊丝 -->
+    <g stroke="#8a1f08" stroke-width="1.4" stroke-linecap="round">
+      <line x1="0" y1="0" x2="0" y2="-3"/>
+      <line x1="0" y1="0" x2="6" y2="-2"/>
+      <line x1="0" y1="0" x2="-6" y2="-2"/>
+      <line x1="0" y1="0" x2="3" y2="4"/>
+      <line x1="0" y1="0" x2="-3" y2="4"/>
+    </g>
+    <circle cx="0" cy="0" r="2.4" fill="#f4b400"/>
+  </g>
+</svg>

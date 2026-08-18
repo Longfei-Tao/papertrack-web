@@ -1,0 +1,12 @@
+name = "papertrack-web"
+pages_build_output_dir = "public"
+compatibility_date = "2024-09-23"
+
+# D1 数据库绑定。database_id 在 `wrangler d1 create papertrack` 后替换。
+[[d1_databases]]
+binding = "DB"
+database_name = "papertrack"
+database_id = "4d48e2b4-25eb-4a75-b37e-daf9c8db75c5"
+
+# 账号制：用户名/密码存在 D1 的 users 表里，无需任何环境变量或密钥。
+# 没有默认账号：第一个人通过「创建课题组」自助注册并自动成为该组 admin，密码自己设。

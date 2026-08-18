@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>厦门大学 · 课题组论文投稿进度看板</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="preconnect" href="https://fonts.loli.net" crossorigin />
+  <link href="https://fonts.loli.net/css2?family=Noto+Serif+SC:wght@500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <span class="brand-logo" aria-hidden="true">
+          <svg viewBox="0 0 64 64" width="42" height="42" role="img" aria-label="厦门大学">
+            <circle cx="32" cy="32" r="31" fill="#9d2235"/>
+            <circle cx="32" cy="32" r="31" fill="none" stroke="#ffffff" stroke-opacity=".25" stroke-width="1.5"/>
+            <g fill="#ffffff">
+              <path d="M20 34 a12 12 0 0 1 24 0 Z"/>
+              <rect x="20" y="34" width="24" height="3.4"/>
+              <rect x="21" y="37.4" width="22" height="9"/>
+              <rect x="18" y="46.4" width="28" height="3"/>
+            </g>
+            <g stroke="#9d2235" stroke-width="1.6">
+              <line x1="25" y1="38" x2="25" y2="46"/>
+              <line x1="32" y1="38" x2="32" y2="46"/>
+              <line x1="39" y1="38" x2="39" y2="46"/>
+            </g>
+            <text x="32" y="29.5" text-anchor="middle" fill="#ffffff" font-size="7" font-family="serif" font-weight="700">1921</text>
+          </svg>
+        </span>
+        <div class="brand-text">
+          <h1>课题组论文投稿进度</h1>
+          <p class="subtitle">厦门大学 · 导师引导 · 投稿进度透明看板</p>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <!-- 课题组切换（登录后显示） -->
+        <select id="teamSelect" class="team-select hidden" title="切换课题组"></select>
+        <!-- 未登录：显示 注册/登录；已登录：显示用户菜单 -->
+        <div id="authArea" class="auth-area">
+          <button id="regBtn" class="btn btn-ghost">注册 / 加入</button>
+          <button id="loginBtn" class="btn btn-ghost">登录</button>
+          <div id="userMenu" class="user-menu hidden">
+            <button id="userBtn" class="btn btn-ghost"></button>
+            <div id="userDropdown" class="dropdown hidden">
+              <button class="dropdown-item" data-act="mine">只看我的</button>
+              <button class="dropdown-item" data-act="team">课题组管理</button>
+              <button class="dropdown-item" data-act="password">修改密码</button>
+              <button class="dropdown-item" data-act="logout">退出登录</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- 顶部统计 -->
+    <section class="stats" id="stats">
+      <div class="stat-card"><div class="stat-num" id="statTotal">–</div><div class="stat-label">论文总数</div></div>
+      <div class="stat-card stat-good"><div class="stat-num" id="statAccepted">–</div><div class="stat-label">接收/已发表</div></div>
+      <div class="stat-card stat-warn"><div class="stat-num" id="statReview">–</div><div class="stat-label">审稿中</div></div>
+      <div class="stat-card stat-rev"><div class="stat-num" id="statRevision">–</div><div class="stat-label">返修中</div></div>
+    </section>
+
+    <!-- 筛选与操作 -->
+    <section class="toolbar">
+      <div class="filters" id="filterBar">
+        <!-- 进度多选 -->
+        <div class="filter-group" id="fgStatus">
+          <button class="filter-trigger" type="button" data-target="fdStatus">
+            <span class="filter-label">进度</span>
+            <span class="filter-value" id="fvStatus">全部</span>
+            <span class="filter-chevron">▾</span>
+          </button>
+          <div class="filter-dropdown hidden" id="fdStatus"></div>
+        </div>
+        <!-- 成员多选 -->
+        <div class="filter-group" id="fgOwner">
+          <button class="filter-trigger" type="button" data-target="fdOwner">
+            <span class="filter-label">成员</span>
+            <span class="filter-value" id="fvOwner">全部成员</span>
+            <span class="filter-chevron">▾</span>
+          </button>
+          <div class="filter-dropdown hidden" id="fdOwner"></div>
+        </div>
+        <!-- 分区多选 -->
+        <div class="filter-group" id="fgQuartile">
+          <button class="filter-trigger" type="button" data-target="fdQuartile">
+            <span class="filter-label">分区</span>
+            <span class="filter-value" id="fvQuartile">全部</span>
+            <span class="filter-chevron">▾</span>
+          </button>
+          <div class="filter-dropdown hidden" id="fdQuartile"></div>
+        </div>
+        <!-- 截止时间 -->
+        <div class="filter-group" id="fgDeadline">
+          <button class="filter-trigger" type="button" data-target="fdDeadline">
+            <span class="filter-label">截止时间</span>
+            <span class="filter-value" id="fvDeadline">全部</span>
+            <span class="filter-chevron">▾</span>
+          </button>
+          <div class="filter-dropdown hidden" id="fdDeadline"></div>
+        </div>
+        <!-- 排序 -->
+        <div class="filter-group" id="fgSort">
+          <button class="filter-trigger" type="button" data-target="fdSort">
+            <span class="filter-label">排序</span>
+            <span class="filter-value" id="fvSort">最近更新</span>
+            <span class="filter-chevron">▾</span>
+          </button>
+          <div class="filter-dropdown hidden" id="fdSort"></div>
+        </div>
+        <input id="searchInput" type="search" placeholder="搜索题目 / 期刊" />
+        <button id="refreshBtn" class="btn btn-ghost">刷新</button>
+      </div>
+      <div class="actions">
+        <button id="sampleBtn" class="btn btn-ghost hidden">载入示例数据</button>
+        <button id="addBtn" class="btn btn-primary hidden"><img src="./phoenix-flower.svg" alt="" class="btn-icon" />添加论文</button>
+      </div>
+    </section>
+
+    <!-- 每个人一个独立小框 -->
+    <section class="boards" id="boards">
+      <div class="board-empty">
+        <img src="./phoenix-flower.svg" alt="" class="empty-phx" />
+        <p class="empty-title">正在读取本课题组的投稿进度</p>
+        <p class="empty-sub">若长时间停留在此，请点右上角「登录」</p>
+      </div>
+    </section>
+    <p class="hint">本组进度仅本课题组成员登录后可见。未登录请点右上角「注册 / 加入」：有邀请码选「凭邀请码加入」，新课题组选「创建课题组」。</p>
+  </main>
+
+  <footer class="xmu-footer">
+    <img src="./xmu-building.svg" alt="" class="footer-art" />
+    <p class="footer-text">学术长路 · 嘉庚为灯 — 厦门大学课题组投稿进度看板</p>
+  </footer>
+
+  <!-- 登录弹窗 -->
+  <div id="loginModal" class="modal hidden">
+    <div class="modal-backdrop" data-close-login></div>
+    <div class="modal-card modal-sm">
+      <div class="modal-banner">
+        <img src="./logo-xmu.svg" alt="厦门大学" class="banner-logo" />
+        <div class="banner-text"><strong>厦门大学</strong><span>XIAMEN UNIVERSITY</span></div>
+      </div>
+      <div class="modal-head">
+        <h2>登录</h2>
+        <button class="modal-close" data-close-login>×</button>
+      </div>
+      <form id="loginForm" class="modal-body">
+        <label>用户名<input id="loginUser" autocomplete="username" placeholder="例如：admin" /></label>
+        <label>密码<input id="loginPass" type="password" autocomplete="current-password" placeholder="请输入密码" /></label>
+        <div class="modal-foot">
+          <button type="button" class="btn btn-ghost" data-close-login>取消</button>
+          <button type="submit" class="btn btn-primary">登录</button>
+        </div>
+        <p class="form-tip">还没有账号？<a href="#" id="toRegister">去注册 / 加入 →</a></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- 注册 / 加入弹窗 -->
+  <div id="regModal" class="modal hidden">
+    <div class="modal-backdrop" data-close-reg></div>
+    <div class="modal-card modal-sm">
+      <div class="modal-banner">
+        <img src="./logo-xmu.svg" alt="厦门大学" class="banner-logo" />
+        <div class="banner-text"><strong>厦门大学</strong><span>XIAMEN UNIVERSITY</span></div>
+      </div>
+      <div class="modal-head">
+        <h2>注册 / 加入</h2>
+        <button class="modal-close" data-close-reg>×</button>
+      </div>
+      <div class="tabs">
+        <button type="button" class="tab active" id="tabCreate">创建课题组</button>
+        <button type="button" class="tab" id="tabJoin">凭邀请码加入</button>
+      </div>
+      <form id="regForm" class="modal-body">
+        <label id="regTeamWrap">课题组名称
+          <input id="regTeamName" placeholder="例如：李教授课题组" />
+        </label>
+        <label id="regCodeWrap" class="hidden">邀请码
+          <input id="regCode" placeholder="向课题组管理员索取" />
+        </label>
+        <label>用户名（登录用）
+          <input id="regUsername" autocomplete="username" placeholder="例如：shijie" />
+        </label>
+        <label>姓名（中文姓名，即论文里的"负责人"）
+          <input id="regName" placeholder="例如：张明" />
+        </label>
+        <label>密码（至少 6 位）
+          <input id="regPass" type="password" autocomplete="new-password" placeholder="请设置密码" />
+        </label>
+        <div class="modal-foot">
+          <button type="button" class="btn btn-ghost" data-close-reg>取消</button>
+          <button type="submit" class="btn btn-primary" id="regSubmit">创建课题组</button>
+        </div>
+        <p class="form-tip" id="regTip">创建后你即为该课题组管理员，并可立即获得一条邀请码发给师姐/师妹/导师。</p>
+      </form>
+    </div>
+  </div>
+
+  <!-- 添加/编辑弹窗 -->
+  <div id="modal" class="modal hidden">
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 id="modalTitle">添加论文</h2>
+        <button class="modal-close" data-close>×</button>
+      </div>
+      <form id="paperForm" class="modal-body">
+        <input type="hidden" id="f_id" />
+        <label>论文题目 <span class="req">*</span>
+          <input id="f_title" required maxlength="200" placeholder="例如：基于循证的老年糖尿病患者营养干预研究" />
+        </label>
+        <label>期刊名称
+          <input id="f_journal" maxlength="120" placeholder="例如：Journal of Advanced Nursing" />
+        </label>
+        <div class="row">
+          <label>影响因子 (IF)
+            <input id="f_impact_factor" type="number" step="0.1" min="0" placeholder="例如：2.6" />
+          </label>
+          <label>分区
+            <select id="f_quartile">
+              <option value="待定">待定</option>
+              <option value="Q1">Q1</option>
+              <option value="Q2">Q2</option>
+              <option value="Q3">Q3</option>
+              <option value="Q4">Q4</option>
+            </select>
+          </label>
+        </div>
+        <div class="row">
+          <label>投稿进度
+            <select id="f_status">
+              <option>草稿</option><option>已投稿</option><option>审稿中</option>
+              <option>返修</option><option>接收</option><option>拒稿</option><option>已发表</option>
+            </select>
+          </label>
+          <label>负责人
+            <input id="f_owner" disabled placeholder="自动填为当前账号" />
+          </label>
+        </div>
+        <div class="row">
+          <label>投稿时间
+            <input id="f_submitted_at" type="date" />
+          </label>
+          <label>返修截止日期
+            <input id="f_revision_deadline" type="date" />
+          </label>
+        </div>
+        <label>备注
+          <textarea id="f_note" rows="2" maxlength="300" placeholder="审稿意见、返修截止、校样等"></textarea>
+        </label>
+        <div class="modal-foot">
+          <button type="button" class="btn btn-ghost" data-close>取消</button>
+          <button type="submit" class="btn btn-primary">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 修改密码弹窗 -->
+  <div id="pwModal" class="modal hidden">
+    <div class="modal-backdrop" data-close-pw></div>
+    <div class="modal-card modal-sm">
+      <div class="modal-head">
+        <h2>修改密码</h2>
+        <button class="modal-close" data-close-pw>×</button>
+      </div>
+      <form id="pwForm" class="modal-body">
+        <label>原密码<input id="pwOld" type="password" /></label>
+        <label>新密码（至少 6 位）<input id="pwNew" type="password" /></label>
+        <div class="modal-foot">
+          <button type="button" class="btn btn-ghost" data-close-pw>取消</button>
+          <button type="submit" class="btn btn-primary">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 课题组管理弹窗（课题组管理员） -->
+  <div id="teamModal" class="modal hidden">
+    <div class="modal-backdrop" data-close-team></div>
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 id="teamModalTitle">课题组管理</h2>
+        <button class="modal-close" data-close-team>×</button>
+      </div>
+      <div class="modal-body">
+        <h3 class="sub-h">成员（<span id="teamMemberCount">0</span>）</h3>
+        <div class="users-list" id="membersList"></div>
+        <hr class="sep" />
+        <h3 class="sub-h">邀请码（发给师姐/师妹/导师，他们凭码自助加入）</h3>
+        <div class="invite-gen">
+          <select id="inviteRole">
+            <option value="member">注册后角色：普通成员</option>
+            <option value="admin">注册后角色：管理员</option>
+          </select>
+          <input id="inviteMax" type="number" min="1" placeholder="次数(留空=不限)" />
+          <button id="genInviteBtn" class="btn btn-primary">生成邀请码</button>
+        </div>
+        <div class="invite-list" id="inviteList"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="./app.js"></script>
+</body>
+</html>

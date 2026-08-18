@@ -1,0 +1,13 @@
+{
+  "name": "papertrack-web",
+  "version": "1.0.0",
+  "description": "课题组论文投稿进度看板（PaperTrack Web）",
+  "scripts": {
+    "start": "node start.cjs",
+    "preview": "node preview-server.cjs",
+    "test": "node tests/e2e.cjs"
+  },
+  "keywords": ["paper", "tracking", "research", "xiamen-university"],
+  "license": "MIT",
+  "private": true
+}

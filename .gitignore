@@ -1,0 +1,13 @@
+# 依赖与构建缓存
+node_modules/
+
+# wrangler 本地状态（含本地模拟库，非线上数据）
+.wrangler/
+
+# 助手内部记忆/工作区数据（非项目源码）
+.workbuddy/
+
+# 系统/编辑器
+.DS_Store
+Thumbs.db
+*.log

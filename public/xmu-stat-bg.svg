@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="厦门大学嘉庚建筑与凤凰花角标">
+  <defs>
+    <radialGradient id="glow" cx="0.86" cy="0.9" r="0.62">
+      <stop offset="0" stop-color="#9d2235" stop-opacity="0.14"/>
+      <stop offset="1" stop-color="#9d2235" stop-opacity="0"/>
+    </radialGradient>
+    <g id="phx2" fill="#c0492b">
+      <ellipse cx="0" cy="-7" rx="4" ry="6.6"/>
+      <ellipse cx="0" cy="-7" rx="4" ry="6.6" transform="rotate(72)"/>
+      <ellipse cx="0" cy="-7" rx="4" ry="6.6" transform="rotate(144)"/>
+      <ellipse cx="0" cy="-7" rx="4" ry="6.6" transform="rotate(216)"/>
+      <ellipse cx="0" cy="-7" rx="4" ry="6.6" transform="rotate(288)"/>
+      <circle r="2.6" fill="#7c1a29"/>
+    </g>
+  </defs>
+
+  <rect x="0" y="0" width="200" height="200" fill="url(#glow)"/>
+
+  <!-- 左上角小凤凰花 -->
+  <use href="#phx2" transform="translate(34,30) scale(0.8)" opacity="0.5"/>
+
+  <!-- 右下角嘉庚建筑剪影 -->
+  <g fill="#9d2235" opacity="0.5">
+    <rect x="96" y="188" width="104" height="10"/>
+    <rect x="100" y="178" width="20" height="18"/>
+    <path d="M100,178 C100,168 108,164 120,164 C132,164 140,168 140,178 Z"/>
+    <rect x="176" y="178" width="20" height="18"/>
+    <path d="M176,178 C176,168 184,164 196,164 C208,164 216,168 216,178 Z" transform="translate(-20,0)"/>
+    <rect x="120" y="168" width="56" height="28"/>
+    <path d="M120,168 C120,150 132,146 148,146 C164,146 176,150 176,168 Z"/>
+    <rect x="143" y="132" width="10" height="14"/>
+    <circle cx="148" cy="130" r="4"/>
+    <g stroke="#c2455c" stroke-width="1.4" opacity="0.7">
+      <line x1="130" y1="168" x2="130" y2="188"/>
+      <line x1="142" y1="168" x2="142" y2="188"/>
+      <line x1="154" y1="168" x2="154" y2="188"/>
+      <line x1="166" y1="168" x2="166" y2="188"/>
+    </g>
+  </g>
+</svg>

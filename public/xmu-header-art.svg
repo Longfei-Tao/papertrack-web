@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 130" preserveAspectRatio="xMidYMid slice" role="img" aria-label="厦门大学嘉庚建筑剪影">
+  <defs>
+    <linearGradient id="bldg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5a1320"/>
+      <stop offset="1" stop-color="#741826"/>
+    </linearGradient>
+    <g id="phx" fill="#c0492b">
+      <ellipse cx="0" cy="-7" rx="4" ry="6.6"/>
+      <ellipse cx="0" cy="-7" rx="4" ry="6.6" transform="rotate(72)"/>
+      <ellipse cx="0" cy="-7" rx="4" ry="6.6" transform="rotate(144)"/>
+      <ellipse cx="0" cy="-7" rx="4" ry="6.6" transform="rotate(216)"/>
+      <ellipse cx="0" cy="-7" rx="4" ry="6.6" transform="rotate(288)"/>
+      <circle r="2.6" fill="#7c1a29"/>
+      <g stroke="#7c1a29" stroke-width="0.9">
+        <line x1="0" y1="0" x2="0" y2="-9"/>
+        <line x1="0" y1="0" x2="8.6" y2="2.8"/>
+        <line x1="0" y1="0" x2="-8.6" y2="2.8"/>
+        <line x1="0" y1="0" x2="5.3" y2="-7.3"/>
+        <line x1="0" y1="0" x2="-5.3" y2="-7.3"/>
+      </g>
+    </g>
+  </defs>
+
+  <g id="scene" fill="url(#bldg)">
+    <!-- 左翼长廊（群贤楼风格） -->
+    <rect x="556" y="70" width="268" height="4" fill="#6e1726"/>
+    <rect x="560" y="74" width="260" height="26"/>
+    <g stroke="#8a2030" stroke-width="2" opacity="0.55">
+      <line x1="580" y1="74" x2="580" y2="100"/>
+      <line x1="602" y1="74" x2="602" y2="100"/>
+      <line x1="624" y1="74" x2="624" y2="100"/>
+      <line x1="646" y1="74" x2="646" y2="100"/>
+      <line x1="668" y1="74" x2="668" y2="100"/>
+      <line x1="690" y1="74" x2="690" y2="100"/>
+      <line x1="712" y1="74" x2="712" y2="100"/>
+      <line x1="734" y1="74" x2="734" y2="100"/>
+      <line x1="756" y1="74" x2="756" y2="100"/>
+      <line x1="778" y1="74" x2="778" y2="100"/>
+      <line x1="800" y1="74" x2="800" y2="100"/>
+    </g>
+
+    <!-- 右翼长廊 -->
+    <rect x="1332" y="70" width="268" height="4" fill="#6e1726"/>
+    <rect x="1336" y="74" width="264" height="26"/>
+    <g stroke="#8a2030" stroke-width="2" opacity="0.55">
+      <line x1="1360" y1="74" x2="1360" y2="100"/>
+      <line x1="1382" y1="74" x2="1382" y2="100"/>
+      <line x1="1404" y1="74" x2="1404" y2="100"/>
+      <line x1="1426" y1="74" x2="1426" y2="100"/>
+      <line x1="1448" y1="74" x2="1448" y2="100"/>
+      <line x1="1470" y1="74" x2="1470" y2="100"/>
+      <line x1="1492" y1="74" x2="1492" y2="100"/>
+      <line x1="1514" y1="74" x2="1514" y2="100"/>
+      <line x1="1536" y1="74" x2="1536" y2="100"/>
+      <line x1="1558" y1="74" x2="1558" y2="100"/>
+      <line x1="1580" y1="74" x2="1580" y2="100"/>
+    </g>
+
+    <!-- 建南大会堂：基座 + 窗带 -->
+    <rect x="820" y="92" width="520" height="8"/>
+    <rect x="828" y="84" width="504" height="8" fill="#6e1726"/>
+    <g stroke="#8a2030" stroke-width="1.6" opacity="0.5">
+      <line x1="860" y1="84" x2="860" y2="92"/>
+      <line x1="900" y1="84" x2="900" y2="92"/>
+      <line x1="940" y1="84" x2="940" y2="92"/>
+      <line x1="980" y1="84" x2="980" y2="92"/>
+      <line x1="1020" y1="84" x2="1020" y2="92"/>
+      <line x1="1060" y1="84" x2="1060" y2="92"/>
+      <line x1="1100" y1="84" x2="1100" y2="92"/>
+      <line x1="1140" y1="84" x2="1140" y2="92"/>
+      <line x1="1180" y1="84" x2="1180" y2="92"/>
+      <line x1="1220" y1="84" x2="1220" y2="92"/>
+      <line x1="1260" y1="84" x2="1260" y2="92"/>
+      <line x1="1300" y1="84" x2="1300" y2="92"/>
+    </g>
+
+    <!-- 建南大会堂：三穹顶 -->
+    <!-- 左副穹顶 -->
+    <rect x="860" y="82" width="120" height="18"/>
+    <path d="M860,82 C860,68 884,62 920,62 C956,62 980,68 980,82 Z"/>
+    <!-- 右副穹顶 -->
+    <rect x="1180" y="82" width="120" height="18"/>
+    <path d="M1180,82 C1180,68 1204,62 1240,62 C1276,62 1300,68 1300,82 Z"/>
+    <!-- 中央主穹顶 -->
+    <rect x="980" y="70" width="200" height="30"/>
+    <path d="M980,70 C980,46 1012,40 1080,40 C1148,40 1180,46 1180,70 Z"/>
+    <rect x="1075" y="24" width="10" height="16"/>
+    <circle cx="1080" cy="22" r="5"/>
+
+    <!-- 凤凰花枝（右上角） -->
+    <path d="M1600,2 C1540,12 1500,24 1458,46" fill="none" stroke="#6e1726" stroke-width="3" opacity="0.5"/>
+    <use href="#phx" transform="translate(1566,8) scale(1.05)"/>
+    <use href="#phx" transform="translate(1508,26) scale(0.9)"/>
+    <use href="#phx" transform="translate(1452,46) scale(0.78)"/>
+  </g>
+
+  <!-- 芙蓉湖倒影 -->
+  <use href="#scene" transform="matrix(1 0 0 -1 0 200)" opacity="0.16"/>
+</svg>

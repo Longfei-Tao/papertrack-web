@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 170" preserveAspectRatio="xMidYMid slice" role="img" aria-label="厦门大学嘉庚建筑横幅">
+  <defs>
+    <linearGradient id="mbg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6e1726"/>
+      <stop offset="0.55" stop-color="#9d2235"/>
+      <stop offset="1" stop-color="#b0334a"/>
+    </linearGradient>
+    <linearGradient id="mbldg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5a1320"/>
+      <stop offset="1" stop-color="#7c1a29"/>
+    </linearGradient>
+    <g id="mphx" fill="#c0492b">
+      <ellipse cx="0" cy="-7" rx="4" ry="6.6"/>
+      <ellipse cx="0" cy="-7" rx="4" ry="6.6" transform="rotate(72)"/>
+      <ellipse cx="0" cy="-7" rx="4" ry="6.6" transform="rotate(144)"/>
+      <ellipse cx="0" cy="-7" rx="4" ry="6.6" transform="rotate(216)"/>
+      <ellipse cx="0" cy="-7" rx="4" ry="6.6" transform="rotate(288)"/>
+      <circle r="2.6" fill="#7c1a29"/>
+    </g>
+  </defs>
+
+  <rect width="760" height="170" fill="url(#mbg)"/>
+
+  <!-- 右侧嘉庚建筑群：建南大会堂三穹顶 + 长廊 -->
+  <g fill="url(#mbldg)">
+    <!-- 长廊基座与柱廊 -->
+    <rect x="430" y="120" width="300" height="5" fill="#6e1726"/>
+    <rect x="436" y="125" width="288" height="45"/>
+    <g stroke="#8a2030" stroke-width="2" opacity="0.5">
+      <line x1="452" y1="125" x2="452" y2="170"/>
+      <line x1="478" y1="125" x2="478" y2="170"/>
+      <line x1="504" y1="125" x2="504" y2="170"/>
+      <line x1="530" y1="125" x2="530" y2="170"/>
+      <line x1="600" y1="125" x2="600" y2="170"/>
+      <line x1="626" y1="125" x2="626" y2="170"/>
+      <line x1="652" y1="125" x2="652" y2="170"/>
+      <line x1="678" y1="125" x2="678" y2="170"/>
+      <line x1="704" y1="125" x2="704" y2="170"/>
+    </g>
+    <!-- 左副穹顶 -->
+    <rect x="455" y="104" width="80" height="21"/>
+    <path d="M455,104 C455,90 475,84 495,84 C515,84 535,90 535,104 Z"/>
+    <!-- 右副穹顶 -->
+    <rect x="585" y="104" width="80" height="21"/>
+    <path d="M585,104 C585,90 605,84 625,84 C645,84 665,90 665,104 Z"/>
+    <!-- 中央主穹顶 -->
+    <rect x="505" y="86" width="120" height="38"/>
+    <path d="M505,86 C505,58 535,52 565,52 C595,52 625,58 625,86 Z"/>
+    <rect x="560" y="36" width="10" height="16"/>
+    <circle cx="565" cy="34" r="5"/>
+  </g>
+
+  <!-- 凤凰花枝（左上角，避开右侧建筑与左侧文字） -->
+  <path d="M40,2 C70,18 96,34 124,58" fill="none" stroke="#6e1726" stroke-width="3" opacity="0.5"/>
+  <use href="#mphx" transform="translate(36,8) scale(0.95)"/>
+  <use href="#mphx" transform="translate(86,28) scale(0.82)"/>
+  <use href="#mphx" transform="translate(126,54) scale(0.7)"/>
+</svg>

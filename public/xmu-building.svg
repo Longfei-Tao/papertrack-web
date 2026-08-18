@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 160" role="img" aria-label="嘉庚建筑剪影">
+  <defs>
+    <linearGradient id="xmuSky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fbeef0"/>
+      <stop offset="100%" stop-color="#f5f2ef"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="160" fill="url(#xmuSky)"/>
+  <!-- 远山 -->
+  <path d="M0 96 Q150 60 320 92 T640 88 T980 96 T1200 84 L1200 160 L0 160 Z" fill="#f0dcd8" opacity=".6"/>
+  <!-- 嘉庚建筑群剪影（红砖 + 穹顶 + 长廊） -->
+  <g fill="#9d2235">
+    <!-- 建南大会堂式：主体 + 三穹顶 -->
+    <rect x="120" y="70" width="180" height="60"/>
+    <path d="M150 70 a20 20 0 0 1 40 0 Z"/>
+    <path d="M210 70 a20 20 0 0 1 40 0 Z"/>
+    <path d="M270 70 a20 20 0 0 1 40 0 Z"/>
+    <rect x="108" y="130" width="204" height="30"/>
+    <!-- 颂恩楼式：双檐 + 高楼 -->
+    <rect x="360" y="40" width="70" height="90"/>
+    <path d="M348 40 h94 l-14 -14 h-66 Z"/>
+    <rect x="452" y="56" width="54" height="74"/>
+    <path d="M442 56 h74 l-12 -12 h-50 Z"/>
+    <!-- 长廊（群贤楼群） -->
+    <rect x="560" y="84" width="300" height="46"/>
+    <g fill="#7c1a29">
+      <rect x="572" y="96" width="10" height="34"/>
+      <rect x="600" y="96" width="10" height="34"/>
+      <rect x="628" y="96" width="10" height="34"/>
+      <rect x="656" y="96" width="10" height="34"/>
+      <rect x="684" y="96" width="10" height="34"/>
+      <rect x="712" y="96" width="10" height="34"/>
+      <rect x="740" y="96" width="10" height="34"/>
+      <rect x="768" y="96" width="10" height="34"/>
+      <rect x="796" y="96" width="10" height="34"/>
+      <rect x="824" y="96" width="10" height="34"/>
+    </g>
+    <path d="M556 84 h308 l-10 -12 h-288 Z"/>
+    <!-- 右侧钟楼 -->
+    <rect x="900" y="34" width="48" height="96"/>
+    <path d="M894 34 h60 l-8 -12 h-44 Z"/>
+    <path d="M906 18 a18 18 0 0 1 36 0 Z"/>
+    <!-- 上弦场拱门 -->
+    <rect x="1000" y="78" width="150" height="52"/>
+    <path d="M1040 130 v-34 a20 20 0 0 1 40 0 v34 Z" fill="#7c1a29"/>
+    <path d="M1100 130 v-30 a16 16 0 0 1 32 0 v30 Z" fill="#7c1a29"/>
+  </g>
+  <!-- 芙蓉湖倒影 -->
+  <g fill="#9d2235" opacity=".12" transform="translate(0 320) scale(1 -1)">
+    <rect x="120" y="70" width="180" height="60"/>
+    <rect x="360" y="40" width="70" height="90"/>
+    <rect x="900" y="34" width="48" height="96"/>
+    <rect x="1000" y="78" width="150" height="52"/>
+  </g>
+</svg>
