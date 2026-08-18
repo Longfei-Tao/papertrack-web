@@ -629,3 +629,77 @@ body {
   .container { max-width: 100%; width: 100%; padding: 20px; }
   .paper-table th, .paper-table td { padding: 9px 10px; }
 }
+
+/* ---------- 顶栏「使用说明」按钮 ---------- */
+.topbar-help { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.45); color: #fff; }
+.topbar-help:hover { background: rgba(255,255,255,.22); }
+
+/* ---------- 使用说明引导向导 ---------- */
+.onboard-card { width: min(520px, 94vw); overflow: hidden; }
+.onboard-banner {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 20px; color: #fff; position: relative;
+  background-image: url("./xmu-modal-banner.svg"), linear-gradient(135deg, #6e1726 0%, #9d2235 55%, #b0334a 100%);
+  background-repeat: no-repeat, no-repeat;
+  background-position: right center, center;
+  background-size: cover, cover;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+.onboard-banner .banner-text strong { display: block; font-family: var(--serif); font-size: 1.05rem; letter-spacing: .05em; }
+.onboard-banner .banner-text span { font-size: 11px; opacity: .82; letter-spacing: .1em; }
+.onboard-banner .modal-close { position: absolute; right: 14px; top: 12px; color: #fff; }
+.onboard-stage {
+  min-height: 290px; padding: 26px 28px 8px;
+  display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px;
+}
+.onboard-illu { width: 116px; height: 116px; flex-shrink: 0; }
+.onboard-step-title { font-family: var(--serif); font-size: 1.2rem; font-weight: 700; color: var(--primary-d); margin: 0; }
+.onboard-step-text { font-size: 13.5px; color: var(--ink); line-height: 1.75; margin: 0; max-width: 420px; }
+.onboard-step-text b { color: var(--primary-d); }
+.onboard-dots { display: flex; justify-content: center; gap: 7px; padding: 4px 0 2px; }
+.onboard-dots .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--line-strong); transition: background .2s, width .2s; }
+.onboard-dots .dot.active { background: var(--primary); width: 20px; border-radius: 999px; }
+.onboard-nav {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 20px 18px; border-top: 1px solid var(--line);
+}
+.onboard-nav-right { display: flex; gap: 8px; }
+
+/* ---------- 课题组使用情况面板 ---------- */
+.usage-stats { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.usage-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 999px; background: var(--bg);
+  border: 1px solid var(--line); font-size: 12.5px; color: var(--ink);
+}
+.usage-chip b { font-family: var(--serif); font-size: 15px; color: var(--primary-d); margin-left: 2px; }
+.usage-members { display: flex; flex-direction: column; gap: 8px; margin-bottom: 6px; }
+.usage-member {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg);
+}
+.usage-member .u-avatar {
+  width: 26px; height: 26px; border-radius: 50%; background: var(--primary); color: #fff;
+  display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0;
+}
+.usage-member .u-name { font-weight: 600; color: var(--ink); }
+.usage-member .u-role { font-size: 11px; color: var(--muted); }
+.usage-member .u-counts { display: inline-flex; gap: 6px; flex-wrap: wrap; margin-left: auto; }
+.usage-member .u-mini { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); color: var(--muted); }
+.usage-member .u-mini.zero { opacity: .45; }
+.usage-activity { display: flex; flex-direction: column; gap: 0; }
+.activity-row {
+  display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: var(--ink);
+  padding: 7px 4px; border-bottom: 1px dashed var(--line);
+}
+.activity-row:last-child { border-bottom: none; }
+.activity-row .a-who { font-weight: 600; color: var(--primary-d); white-space: nowrap; }
+.activity-row .a-title { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.activity-row .a-time { color: var(--muted); white-space: nowrap; font-size: 11.5px; }
+.usage-empty { font-size: 12.5px; color: var(--muted); padding: 6px 2px; margin: 0; }
+
+@media (max-width: 760px) {
+  .usage-member .u-counts { margin-left: 0; width: 100%; }
+  .onboard-stage { min-height: 260px; padding: 22px 18px 8px; }
+  .onboard-illu { width: 96px; height: 96px; }
+}

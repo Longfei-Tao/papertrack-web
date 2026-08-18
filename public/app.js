@@ -7,6 +7,7 @@ const API = (typeof location !== "undefined" && location.protocol === "file:")
 
 const state = {
   papers: [],          // 本组全部论文（原始）
+  members: [],         // 本组成员（课题组管理 / 使用情况用）
   filtered: [],        // 过滤/排序后的论文
   token: localStorage.getItem("pt_token") || "",
   user: null,                // {id, username, display_name}
@@ -234,6 +235,44 @@ async function submitReg(e) {
     toast("已加入课题组：" + (data.teams[0] ? data.teams[0].name : ""));
   }
 }
+
+// ---------- 使用说明引导向导（首次访问自动弹出，分片指导） ----------
+const ONBOARD_SLIDES = [
+  { title: "欢迎使用 · 课题组投稿进度看板", illu: "./xmu-building.svg",
+    text: "这是一块<b>课题组共享</b>的看板：导师与同门在同一块板上，透明追踪每篇论文的投稿状态。本组进度仅本组成员可见。" },
+  { title: "第一步：注册 / 加入课题组", illu: "./logo-xmu.svg",
+    text: "点右上角「<b>注册 / 加入</b>」。有邀请码选「凭邀请码加入」；要新建课题组选「创建课题组」，创建者即管理员，并自动获得邀请码，可发给师姐、师妹、导师。" },
+  { title: "第二步：添加你的论文", illu: "./phoenix-flower.svg",
+    text: "登录后点「<b>添加论文</b>」，填写题目、期刊、影响因子、分区与进度。论文会按「负责人」（你的姓名）自动归入你的专属小框。" },
+  { title: "第三步：看懂看板", illu: "./xmu-stat-bg.svg",
+    text: "每位成员一张卡片，展示其论文；可按<b>进度 / 成员 / 分区</b>筛选、排序、搜索。顶部统计卡显示整体：总数、接收/已发表、审稿中、返修中。" },
+  { title: "第四步：课题组管理 & 隐私", illu: "./logo-xmu.svg",
+    text: "管理员点「<b>课题组管理</b>」可生成邀请码、调整成员角色、移除成员。同组默认<b>可见彼此论文</b>；想只看自己，点右上角头像 → 「只看我的」。" },
+  { title: "开始使用吧", illu: "./phoenix-flower.svg",
+    text: "现在就去右上角「注册 / 加入」，创建或加入你的第一个课题组，添加第一篇论文。随时可点右上角「使用说明」重温本向导。" },
+];
+let onboardIdx = 0;
+function onboardRender() {
+  const s = ONBOARD_SLIDES[onboardIdx];
+  $("onboardStage").innerHTML =
+    `<img class="onboard-illu" src="${s.illu}" alt="" />
+     <h3 class="onboard-step-title">${esc(s.title)}</h3>
+     <p class="onboard-step-text">${s.text}</p>`;
+  $("onboardDots").innerHTML = ONBOARD_SLIDES.map((_, i) =>
+    `<span class="dot ${i === onboardIdx ? "active" : ""}"></span>`).join("");
+  $("onboardPrev").style.visibility = onboardIdx === 0 ? "hidden" : "visible";
+  $("onboardNext").textContent = onboardIdx === ONBOARD_SLIDES.length - 1 ? "开始使用" : "下一步";
+}
+function openOnboard() { onboardIdx = 0; onboardRender(); $("onboardModal").classList.remove("hidden"); }
+function closeOnboard(done) {
+  $("onboardModal").classList.add("hidden");
+  if (done) { try { localStorage.setItem("pt_onboarded", "1"); } catch (e) {} }
+}
+function onboardNext() {
+  if (onboardIdx >= ONBOARD_SLIDES.length - 1) { closeOnboard(true); return; }
+  onboardIdx++; onboardRender();
+}
+function onboardPrev() { if (onboardIdx > 0) { onboardIdx--; onboardRender(); } }
 
 // ---------- 数据加载 ----------
 async function loadPapers() {
@@ -590,6 +629,7 @@ function closeTeam() { $("teamModal").classList.add("hidden"); }
 async function loadMembers() {
   const { ok, data } = await api("GET", "/teams/" + encodeURIComponent(state.currentTeam) + "/members");
   if (!ok) { toast(data.error || "无法加载成员"); return; }
+  state.members = data.members || [];
   const isAdmin = currentRole() === "admin";
   $("teamMemberCount").textContent = data.members.length;
   const list = $("membersList");
@@ -608,6 +648,7 @@ async function loadMembers() {
       <span class="user-row-actions">${roleBtn}${canRemove ? `<button class="link-btn del" data-delmember="${esc(m.user_id)}">移除</button>` : ""}</span>
     </div>`;
   }).join("");
+  renderUsage();
 }
 
 async function setMemberRole(uid, role) {
@@ -662,6 +703,89 @@ async function copyInvite(code) {
     toast("已复制邀请码：" + code);
   } catch (e) {
     prompt("复制以下邀请码发给大家：", code);
+  }
+}
+
+// ---------- 课题组使用情况（投稿全景） ----------
+function timeAgo(iso) {
+  if (!iso) return "";
+  const d = new Date(iso).getTime();
+  if (isNaN(d)) return "";
+  const diff = Date.now() - d;
+  const min = 60000, hr = 3600000, day = 86400000;
+  if (diff < min) return "刚刚";
+  if (diff < hr) return Math.floor(diff / min) + " 分钟前";
+  if (diff < day) return Math.floor(diff / hr) + " 小时前";
+  if (diff < day * 30) return Math.floor(diff / day) + " 天前";
+  return Math.floor(diff / (day * 30)) + " 个月前";
+}
+
+// 基于本组论文 + 成员，前端聚合展示"谁加了哪些论文、整体进度、最近动态"。
+// 无需后端改动：state.papers 已含全部本组论文（owner_id / owner_name / status / updated_at）。
+function renderUsage() {
+  const members = state.members || [];
+  const papers = state.papers || [];
+  const statsEl = $("usageStats");
+  if (!statsEl) return;
+
+  // 1) 整体统计卡（按状态分布）
+  const byStatus = {};
+  for (const p of papers) { const s = p.status || "草稿"; byStatus[s] = (byStatus[s] || 0) + 1; }
+  const statusOrder = ["草稿", "已投稿", "审稿中", "返修", "接收", "拒稿", "已发表"];
+  const chip = (label, num) => `<span class="usage-chip">${label} <b>${num}</b></span>`;
+  let chips = chip("论文总数", papers.length);
+  for (const s of statusOrder) if (byStatus[s]) chips += chip(s, byStatus[s]);
+  statsEl.innerHTML = chips || '<span class="usage-empty">还没有论文数据。</span>';
+
+  // 2) 每位成员论文明细（优先按 owner_id 匹配，兼容仅 owner_name）
+  const byMember = {};
+  for (const m of members) byMember[m.user_id] = { name: m.display_name, role: m.role, total: 0, recv: 0, review: 0, rev: 0 };
+  for (const p of papers) {
+    const key = p.owner_id || ("name:" + (p.owner_name || ""));
+    if (!byMember[key]) byMember[key] = { name: p.owner_name || "未分配", role: "", total: 0, recv: 0, review: 0, rev: 0 };
+    const g = byMember[key];
+    g.total++;
+    if (p.status === "接收" || p.status === "已发表") g.recv++;
+    else if (p.status === "审稿中") g.review++;
+    else if (p.status === "返修") g.rev++;
+  }
+  const membersEl = $("usageMembers");
+  const ids = Object.keys(byMember);
+  if (!ids.length) {
+    membersEl.innerHTML = '<p class="usage-empty">还没有成员。</p>';
+  } else {
+    membersEl.innerHTML = ids.map((k) => {
+      const g = byMember[k];
+      const mini = (label, n) => `<span class="u-mini ${n ? "" : "zero"}">${label} ${n}</span>`;
+      return `<div class="usage-member">
+        <span class="u-avatar">${esc((g.name || "?").slice(0, 1))}</span>
+        <span class="u-name">${esc(g.name || "未分配")}</span>
+        ${g.role ? `<span class="u-role">${g.role === "admin" ? "管理员" : "成员"}</span>` : ""}
+        <span class="u-counts">
+          ${mini("共", g.total)}
+          ${mini("接收/发表", g.recv)}
+          ${mini("审稿", g.review)}
+          ${mini("返修", g.rev)}
+        </span>
+      </div>`;
+    }).join("");
+  }
+
+  // 3) 最近动态（按 updated_at 倒序取前 8 条）
+  const actEl = $("usageActivity");
+  const recent = [...papers].sort((a, b) => String(b.updated_at || "").localeCompare(String(a.updated_at || ""))).slice(0, 8);
+  if (!recent.length) {
+    actEl.innerHTML = '<p class="usage-empty">暂无动态。</p>';
+  } else {
+    actEl.innerHTML = recent.map((p) => {
+      const st = p.status || "";
+      return `<div class="activity-row">
+        <span class="a-who">${esc(p.owner_name || "未分配")}</span>
+        <span class="a-title">《${esc(p.title || "未命名论文")}》</span>
+        <span class="badge s-${st}">${esc(st)}</span>
+        <span class="a-time">${timeAgo(p.updated_at)}</span>
+      </div>`;
+    }).join("");
   }
 }
 
@@ -814,6 +938,13 @@ function bind() {
   // 添加/编辑弹窗关闭
   document.querySelectorAll("[data-close]").forEach((el) => el.addEventListener("click", closeModal));
   $("paperForm").addEventListener("submit", submitPaper);
+
+  // 使用说明向导
+  $("helpBtn").addEventListener("click", openOnboard);
+  $("onboardNext").addEventListener("click", onboardNext);
+  $("onboardPrev").addEventListener("click", onboardPrev);
+  $("onboardSkip").addEventListener("click", () => closeOnboard(true));
+  document.querySelectorAll("[data-close-onboard]").forEach((el) => el.addEventListener("click", () => closeOnboard(false)));
 }
 
 function debounce(fn, ms) {
@@ -837,3 +968,8 @@ if (typeof location !== "undefined" && location.protocol === "file:") {
 }
 
 boot();
+
+// 首次访问自动弹出使用说明向导（之后不再打扰，可用右上角「使用说明」重看）
+try {
+  if (!localStorage.getItem("pt_onboarded")) setTimeout(openOnboard, 400);
+} catch (e) {}

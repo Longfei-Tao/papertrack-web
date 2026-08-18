@@ -36,6 +36,7 @@
         </div>
       </div>
       <div class="topbar-right">
+        <button id="helpBtn" class="btn btn-ghost topbar-help">使用说明</button>
         <!-- 课题组切换（登录后显示） -->
         <select id="teamSelect" class="team-select hidden" title="切换课题组"></select>
         <!-- 未登录：显示 注册/登录；已登录：显示用户菜单 -->
@@ -304,6 +305,35 @@
           <button id="genInviteBtn" class="btn btn-primary">生成邀请码</button>
         </div>
         <div class="invite-list" id="inviteList"></div>
+        <hr class="sep" />
+        <h3 class="sub-h">使用情况（本组投稿全景）</h3>
+        <div class="usage-stats" id="usageStats"></div>
+        <div class="usage-members" id="usageMembers"></div>
+        <h3 class="sub-h">最近动态</h3>
+        <div class="usage-activity" id="usageActivity"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 使用说明引导向导 -->
+  <div id="onboardModal" class="modal hidden">
+    <div class="modal-backdrop" data-close-onboard></div>
+    <div class="modal-card onboard-card">
+      <div class="onboard-banner">
+        <img src="./logo-xmu.svg" alt="厦门大学" class="banner-logo" />
+        <div class="banner-text"><strong>使用说明</strong><span>课题组论文投稿进度看板</span></div>
+        <button class="modal-close" data-close-onboard>×</button>
+      </div>
+      <div class="onboard-body">
+        <div class="onboard-stage" id="onboardStage"></div>
+        <div class="onboard-dots" id="onboardDots"></div>
+        <div class="onboard-nav">
+          <button class="btn btn-ghost" id="onboardSkip">跳过</button>
+          <div class="onboard-nav-right">
+            <button class="btn btn-ghost" id="onboardPrev">上一步</button>
+            <button class="btn btn-primary" id="onboardNext">下一步</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
