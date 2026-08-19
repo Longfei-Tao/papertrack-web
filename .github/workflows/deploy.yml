@@ -1,5 +1,10 @@
 name: Deploy to Cloudflare Pages
 
+# 自动部署：push 到 main 分支时，把 public/ 部署到 Cloudflare Pages。
+# 你自己的仓库要让它跑起来，需要在 GitHub 仓库 Settings → Secrets and variables → Actions 里添加两个 secret：
+#   CLOUDFLARE_API_TOKEN  —— 你的 Cloudflare API Token（权限：Account.Cloudflare Pages Edit）
+#   CLOUDFLARE_ACCOUNT_ID —— 你的 Cloudflare 账号 ID（Dashboard 右侧可复制）
+# 并把下方 --project-name 改成你的 Pages 项目名。
 on:
   push:
     branches: [main]

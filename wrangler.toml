@@ -2,7 +2,10 @@ name = "papertrack-web"
 pages_build_output_dir = "public"
 compatibility_date = "2024-09-23"
 
-# D1 数据库绑定。database_id 在 `wrangler d1 create papertrack` 后替换。
+# D1 数据库绑定。
+# 注意：database_id 只是数据库的「标识符」（门牌号），不是密钥——光有它无法访问数据库，
+# 真正需要保密的是 API Token（本仓库不存，走 GitHub Actions secrets）。故可直接公开。
+# 新用户部署自己的实例时，请用 `wrangler d1 create papertrack` 生成自己的 id 替换下面这行。
 [[d1_databases]]
 binding = "DB"
 database_name = "papertrack"

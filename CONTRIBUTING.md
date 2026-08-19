@@ -15,7 +15,7 @@
 - 重大改动请先开 Issue 讨论。
 - 保持文档与代码同步更新（改了字段 / 接口记得同步 README 与 `docs/部署教程.md`）。
 - 遵循现有代码风格：前端为原生 JavaScript，无构建步骤；后端为 Cloudflare Pages Functions。
-- 部署相关的私人信息（如真实 `database_id`、密钥）**不要**提交进仓库。
+- 部署密钥（如 Cloudflare API Token、各类 `*_TOKEN` / 密码）**不要**提交进仓库——用 GitHub Secrets 管理。`database_id` 只是数据库标识符、非密钥，可直接提交。
 
 ## 行为准则
 

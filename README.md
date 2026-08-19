@@ -102,7 +102,7 @@ wrangler d1 execute papertrack --local --file=./schema.sql
 
 1. `wrangler login` 登录 Cloudflare（没有账号先免费注册）。
 2. `wrangler d1 create papertrack` 创建数据库，复制返回的 `database_id`。
-3. 将 `database_id` 填入 `wrangler.toml`，替换 `REPLACE_WITH_YOUR_D1_ID`。
+3. 将 `database_id` 填入 `wrangler.toml`（替换掉示例值）。数据库 id 只是标识符、非密钥，但部署你自己的实例请务必换成自己的。
 4. `wrangler d1 execute papertrack --file=./schema.sql` 建表。
 5. `wrangler pages deploy public` 部署，获得 `*.pages.dev` 公网地址。
 
@@ -125,8 +125,8 @@ wrangler d1 execute papertrack --local --file=./schema.sql
 
 | 配置项 | 位置 | 说明 |
 |--------|------|------|
-| `database_id` | `wrangler.toml` | D1 数据库 ID，部署前需替换 `REPLACE_WITH_YOUR_D1_ID` |
-| 数据库结构 | `schema.sql` | 建表语句（users / sessions / teams / team_members / invite_codes / papers） |
+| `database_id` | `wrangler.toml` | D1 数据库 ID（仅标识符、非密钥）；部署自己的实例用 `wrangler d1 create` 生成后替换 |
+| 数据库结构 | `schema.sql` | 建表语句（users / sessions / teams / team_members / invite_codes / papers / paper_status_log） |
 | 本地预览端口 | `start.cjs` | 默认 `4173`；`preview-server.cjs` 提供另一种预览方式 |
 
 > 扩展字段（如 DOI、基金号）：在 `schema.sql` 给 `papers` 加列 + 改 `functions/api/papers.js` 读写 + 改 `public/index.html` 表单与 `public/app.js` 渲染即可。
