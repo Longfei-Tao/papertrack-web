@@ -20,8 +20,24 @@
       </div>
       <div class="topbar-right">
         <button id="helpBtn" class="btn btn-ghost topbar-help">使用说明</button>
-        <!-- 课题组切换（登录后显示） -->
-        <select id="teamSelect" class="team-select hidden" title="切换课题组"></select>
+        <!-- 课题组切换（登录后显示）：自定义按钮 + 下拉面板，避免原生 select 视觉不一致 / 被遮挡 -->
+        <div class="team-menu hidden" id="teamMenu">
+          <button id="teamBtn" class="btn btn-ghost team-trigger" type="button"
+                  aria-haspopup="listbox" aria-expanded="false" aria-controls="teamDropdown"
+                  title="切换课题组">
+            <svg class="team-icon" viewBox="0 0 16 16" aria-hidden="true">
+              <circle cx="6" cy="6" r="2.4" fill="currentColor"/>
+              <circle cx="11" cy="6" r="2" fill="currentColor"/>
+              <path d="M2 13c0-2 1.8-3.4 4-3.4s4 1.4 4 3.4" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+              <path d="M9 12c0-1.4 1.1-2.6 2-3 1.4-.2 3 .8 3 2.6" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.75"/>
+            </svg>
+            <span id="teamLabel" class="team-label">课题组</span>
+            <svg class="caret" viewBox="0 0 12 12" aria-hidden="true">
+              <path d="M2.5 4.5l3.5 3.5 3.5-3.5" stroke="currentColor" stroke-width="1.6"
+                    fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
         <!-- 未登录：显示 注册/登录；已登录：显示用户菜单 -->
         <div id="authArea" class="auth-area">
           <button id="regBtn" class="btn btn-ghost">注册 / 加入</button>
@@ -314,7 +330,27 @@
     </div>
   </div>
 
+  <!-- 切换课题组：中央弹窗（与 onboarding 同款 modal，绝对不可能被遮） -->
+  <div id="teamSwitchModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="teamSwitchTitle">
+    <div class="modal-backdrop" data-close-teamswitch></div>
+    <div class="modal-card team-switch-card">
+      <div class="onboard-banner team-switch-banner">
+        <div class="banner-text">
+          <strong id="teamSwitchTitle">切换课题组</strong>
+          <span>选择一个课题组切换视角</span>
+        </div>
+        <button class="modal-close" data-close-teamswitch>×</button>
+      </div>
+      <div class="onboard-body">
+        <ul id="teamSwitchList" class="team-switch-list" role="listbox"></ul>
+      </div>
+    </div>
+  </div>
+
   <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+  <!-- 课题组下拉面板：直接挂在 body 下，脱离 topbar 的 sticky stacking context，压在一切之上 -->
+  <ul id="teamDropdown" class="team-dropdown hidden" role="listbox" aria-labelledby="teamBtn"></ul>
 
   <!-- 品牌配置：默认学术通用主题；改 public/brand.js 可切换为厦大等预设 -->
   <script src="./brand.default.js"></script>

@@ -131,7 +131,7 @@ function updateAuthUI() {
   $("loginBtn").classList.toggle("hidden", !!u);
   $("regBtn").classList.toggle("hidden", !!u);
   $("userMenu").classList.toggle("hidden", !u);
-  $("teamSelect").classList.toggle("hidden", !hasTeams);
+  $("teamMenu").classList.toggle("hidden", !hasTeams);
 
   if (u) {
     // 显示名只展示姓名本身（中文姓名），角色标识由下拉菜单中的"课题组管理"体现
@@ -143,12 +143,50 @@ function updateAuthUI() {
   // 课题组管理入口：仅当前团队管理员可见
   document.querySelector('[data-act="team"]').classList.toggle("hidden", currentRole() !== "admin");
 
-  // 填充团队下拉
-  const sel = $("teamSelect");
-  sel.innerHTML = state.teams
-    .map((t) => `<option value="${esc(t.id)}">${esc(t.name)}${t.role === "admin" ? "（管理）" : ""}</option>`)
-    .join("");
-  sel.value = state.currentTeam;
+  // 填充课题组下拉（关闭态只显示「课题组」+图标，避免与右侧用户按钮撞名）
+  const lbl = $("teamLabel");
+  const btn = $("teamBtn");
+  const menu = $("teamMenu");
+  if (!hasTeams) {
+    lbl.textContent = "课题组";
+    btn.title = "课题组";
+  } else {
+    const cur = state.teams.find((t) => t.id === state.currentTeam);
+    const curName = cur ? cur.name : (state.teams[0] ? state.teams[0].name : "");
+    lbl.textContent = "课题组";
+    btn.title = curName ? `当前：${curName}（点击切换）` : "切换课题组";
+  }
+}
+
+// ---------- 课题组切换 modal（中央弹窗，绝对可见） ----------
+function openTeamSwitch() {
+  if (!state.teams.length) return;
+  const ul = $("teamSwitchList");
+  ul.innerHTML = state.teams.map((t) => {
+    const isActive = t.id === state.currentTeam;
+    const roleTag = t.role === "admin" ? '<span class="role-tag">管理</span>' : "";
+    return `<li><button type="button" class="team-switch-item${isActive ? " is-active" : ""}"
+                      role="option" aria-selected="${isActive}"
+                      data-team="${esc(t.id)}">
+              <span class="team-name">${esc(t.name)}</span>${roleTag}</button></li>`;
+  }).join("");
+  openDialog($("teamSwitchModal"), closeTeamSwitch);
+  // 焦点放在第一项
+  setTimeout(() => {
+    const first = ul.querySelector("button");
+    if (first) first.focus();
+  }, 60);
+}
+function closeTeamSwitch() {
+  closeDialog($("teamSwitchModal"));
+}
+function switchToTeam(id) {
+  if (!id || id === state.currentTeam) { closeTeamSwitch(); return; }
+  state.currentTeam = id;
+  localStorage.setItem("pt_team", state.currentTeam);
+  closeTeamSwitch();
+  updateAuthUI();
+  loadPapers();
 }
 
 async function doLogin(e) {
@@ -690,6 +728,7 @@ function openPw() { $("pwForm").reset(); openDialog($("pwModal"), closePw); }
 function closePw() { closeDialog($("pwModal")); }
 
 function toggleDropdown() {
+  closeTeamDropdown(); // 互斥：开用户菜单前先关掉课题组菜单
   const box = $("userDropdown");
   box.classList.toggle("hidden");
   $("userBtn").setAttribute("aria-expanded", String(!box.classList.contains("hidden")));
@@ -697,6 +736,15 @@ function toggleDropdown() {
 function closeDropdown() {
   $("userDropdown").classList.add("hidden");
   $("userBtn").setAttribute("aria-expanded", "false");
+}
+
+function closeTeamDropdown() {
+  const dd = $("teamDropdown");
+  if (!dd) return;
+  if (!dd.classList.contains("hidden")) {
+    dd.classList.add("hidden");
+    $("teamBtn").setAttribute("aria-expanded", "false");
+  }
 }
 
 // ---------- 课题组管理 ----------
@@ -940,14 +988,52 @@ async function loadSample() {
 }
 
 // ---------- 事件绑定 ----------
+// 计算并设置 teamDropdown 的屏幕坐标（fixed 定位 + inline 坐标，绕过任何 stacking context）
+function positionTeamDropdown() {
+  const btn = $("teamBtn");
+  const dd = $("teamDropdown");
+  // 此时 dd 已 visible（由 toggle 保证），可放心量 offsetWidth
+  const r = btn.getBoundingClientRect();
+  const dW = dd.offsetWidth || 240;
+  const dH = dd.offsetHeight || 160;
+  const margin = 8;
+  // 默认向下展开；若下方空间不足则向上展开
+  const flipUp = r.bottom + margin + dH > window.innerHeight && r.top - margin - dH > 0;
+  let x = r.left;
+  if (x + dW > window.innerWidth - 8) x = Math.max(8, r.right - dW);
+  const y = flipUp ? (r.top - dH - margin) : (r.bottom + margin);
+  // inline 直接接管（不依赖 CSS 变量传递，避免任何 stacking context 限制）
+  dd.style.position = "fixed";
+  dd.style.left = x + "px";
+  dd.style.top = y + "px";
+  dd.style.zIndex = "9999";
+}
+
+// 课题组切换（自定义下拉）
+function toggleTeamDropdown() {
+  const dd = $("teamDropdown");
+  const opening = dd.classList.contains("hidden");
+  if (opening) closeDropdown(); // 互斥：先关掉用户菜单
+  dd.classList.toggle("hidden");
+  const visible = !dd.classList.contains("hidden");
+  $("teamBtn").setAttribute("aria-expanded", String(visible));
+  if (visible) {
+    // 等一帧让 dd 有尺寸再定位
+    requestAnimationFrame(positionTeamDropdown);
+  }
+}
+
+// 课题组切换（modal 中央弹窗，绝对不会被遮）
 function bind() {
-  // 团队切换
-  $("teamSelect").addEventListener("change", (e) => {
-    state.currentTeam = e.target.value;
-    localStorage.setItem("pt_team", state.currentTeam);
-    updateAuthUI();
-    loadPapers();
+  $("teamBtn").addEventListener("click", openTeamSwitch);
+  $("teamSwitchList").addEventListener("click", (e) => {
+    const btn = e.target.closest(".team-switch-item");
+    if (!btn) return;
+    switchToTeam(btn.getAttribute("data-team"));
   });
+  document.querySelectorAll("[data-close-teamswitch]").forEach((el) =>
+    el.addEventListener("click", closeTeamSwitch)
+  );
 
   // 登录区
   $("loginBtn").addEventListener("click", openLogin);
@@ -955,7 +1041,10 @@ function bind() {
   $("loginForm").addEventListener("submit", doLogin);
   $("toRegister").addEventListener("click", (e) => { e.preventDefault(); closeLogin(); openReg(); });
   $("userBtn").addEventListener("click", (e) => { e.stopPropagation(); toggleDropdown(); });
-  document.addEventListener("click", () => closeDropdown());
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".user-menu")) closeDropdown();
+    if (!e.target.closest(".team-menu")) closeTeamDropdown();
+  });
   $("userDropdown").addEventListener("click", (e) => {
     const act = e.target.getAttribute("data-act");
     if (!act) return;
