@@ -14,6 +14,8 @@ window.BRAND_XMU = {
     primaryDark: "#7c1a29",
     primaryLight: "#b0334a",
     primarySubtle: "#fbeef0",
+    primaryHover: "#b0334a", // 悬停：嘉庚红亮一档
+    primaryPressed: "#6e1626", // 按下：嘉庚红深一档
   },
 
   motto: "学术长路 · 嘉庚为灯",

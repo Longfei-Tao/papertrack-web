@@ -11,11 +11,14 @@ window.BRAND_DEFAULT = {
   shortName: "课题组",            // 页脚等简称
 
   // 主题色四件套（注入为 CSS 变量 --primary / --primary-d / --primary-l / --primary-subtle）
+  // Apple 交互色阶：primaryHover（悬停变浅）/ primaryPressed（按下变深），未配置时自动派生
   colors: {
     primary: "#2b4a6f",      // 墨蓝（主色）
-    primaryDark: "#1e3552",  // 深一档（渐变暗端 / hover）
-    primaryLight: "#4a7099", // 亮一档（渐变亮端）
+    primaryDark: "#1e3552",  // 深一档（渐变暗端 / 按下）
+    primaryLight: "#4a7099", // 亮一档（渐变亮端 / 悬停）
     primarySubtle: "#eaf0f6", // 浅底（选中/高亮背景）
+    primaryHover: "#3a6188",  // 悬停（比主色亮一档）
+    primaryPressed: "#16283e",// 按下（比主色深一档）
   },
 
   // 标语 / 题字

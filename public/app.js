@@ -23,6 +23,7 @@ const state = {
     sort: "updated",         // updated | status | owner
   },
   openFilter: null,          // 当前打开的下拉 id
+  filterOpener: null,        // 打开下拉的触发按钮（关闭时归还焦点用）
 };
 
 const $ = (id) => document.getElementById(id);
@@ -420,7 +421,7 @@ function buildRadio(domId, options, current, onPick) {
   box.querySelectorAll(".filter-radio").forEach((btn) => {
     btn.addEventListener("click", () => {
       onPick(btn.getAttribute("data-v"));
-      closeFilterDropdowns();
+      closeFilterDropdowns(true); // 选中后关闭并把焦点还给触发按钮
       renderFilterBar();
     });
   });
@@ -434,16 +435,32 @@ function syncFilterAria() {
     btn.setAttribute("aria-expanded", box ? String(!box.classList.contains("hidden")) : "false");
   });
 }
-function closeFilterDropdowns() {
+// restoreFocus=true 时把焦点还给打开面板的触发按钮（Esc 关闭 / 选中后关闭的场景）
+function closeFilterDropdowns(restoreFocus) {
+  const opener = state.filterOpener;
+  const wasOpen = !!state.openFilter;
   document.querySelectorAll(".filter-dropdown").forEach((d) => d.classList.add("hidden"));
   state.openFilter = null;
+  state.filterOpener = null;
   syncFilterAria();
+  if (restoreFocus && wasOpen && opener && document.contains(opener)) opener.focus();
 }
-function toggleFilterDropdown(id) {
+// 下拉面板内可聚焦的可选项（Apple 菜单：radio 单选 / checkbox 多选 / 底部快捷操作）
+function filterMenuItems(box) {
+  return Array.from(box.querySelectorAll(".filter-radio, .filter-mini, input[type='checkbox']"));
+}
+function toggleFilterDropdown(id, openerEl) {
   const box = $(id);
   const willOpen = box.classList.contains("hidden");
   closeFilterDropdowns();
-  if (willOpen) { box.classList.remove("hidden"); state.openFilter = id; }
+  if (willOpen) {
+    box.classList.remove("hidden");
+    state.openFilter = id;
+    state.filterOpener = openerEl || document.activeElement;
+    // 打开后面板内第一个可选项获得焦点（Apple 菜单行为）
+    const first = filterMenuItems(box)[0];
+    if (first) first.focus();
+  }
   syncFilterAria();
 }
 
@@ -598,10 +615,29 @@ document.addEventListener("keydown", (e) => {
       e.preventDefault();
       (top.close || (() => closeDialog(top.el)))();
     } else {
-      closeFilterDropdowns();
+      closeFilterDropdowns(true); // Apple 范式：Esc 关闭时焦点归还触发按钮
       closeDropdown();
     }
     return;
+  }
+  // 下拉面板内的方向键 / Home / End 导航（无弹窗打开时才生效）
+  if (state.openFilter && !_dlgStack.length) {
+    const box = $(state.openFilter);
+    if (box && !box.classList.contains("hidden")) {
+      if (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "Home" || e.key === "End") {
+        const items = filterMenuItems(box);
+        if (!items.length) return;
+        const cur = items.indexOf(document.activeElement);
+        let next = cur;
+        if (e.key === "ArrowDown") next = cur < 0 ? 0 : Math.min(cur + 1, items.length - 1);
+        else if (e.key === "ArrowUp") next = cur < 0 ? items.length - 1 : Math.max(cur - 1, 0);
+        else if (e.key === "Home") next = 0;
+        else if (e.key === "End") next = items.length - 1;
+        e.preventDefault();
+        items[next].focus();
+        return;
+      }
+    }
   }
   if (e.key === "Tab" && _dlgStack.length) {
     const dlg = _dlgStack[_dlgStack.length - 1].el;
@@ -962,7 +998,7 @@ function bind() {
   document.querySelectorAll(".filter-trigger").forEach((btn) => {
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
-      toggleFilterDropdown(btn.getAttribute("data-target"));
+      toggleFilterDropdown(btn.getAttribute("data-target"), btn);
     });
   });
   // 点击下拉内部不关闭；点击外部关闭
@@ -1027,6 +1063,9 @@ function applyBrand() {
     root.style.setProperty("--primary-d", B.colors.primaryDark);
     root.style.setProperty("--primary-l", B.colors.primaryLight || B.colors.primary);
     root.style.setProperty("--primary-subtle", B.colors.primarySubtle);
+    // Apple 交互色阶：hover 变浅、pressed 变深；未配置时自动派生
+    root.style.setProperty("--primary-hover", B.colors.primaryHover || B.colors.primaryLight || B.colors.primary);
+    root.style.setProperty("--primary-pressed", B.colors.primaryPressed || B.colors.primaryDark || B.colors.primary);
   }
 
   // 2) 文本：浏览器标题、顶栏副标题、页脚题字

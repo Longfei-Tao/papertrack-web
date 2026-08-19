@@ -12,6 +12,14 @@
   --primary-subtle: #eaf0f6;
   --primary-l: #4a7099;       /* 渐变亮端（运行时由品牌注入覆盖） */
 
+  /* Apple 交互色阶（运行时由品牌注入覆盖；hover 变浅、pressed 变深） */
+  --primary-hover: #3a6188;    /* 悬停：比主色亮一档 */
+  --primary-pressed: #16283e;  /* 按下：比主色深一档 */
+
+  /* 动效节奏（Apple 默认 0.2s ease-out） */
+  --motion: 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+  --motion-fast: 0.12s cubic-bezier(0.25, 0.1, 0.25, 1);
+
   --good: #2f7d52;
   --good-subtle: #e4f3ea;
   --warn: #c2740a;
@@ -69,7 +77,7 @@ body {
   font-size: 14px;
 }
 
-/* ---------- 顶栏 ---------- */
+/* ---------- 顶栏（紧凑：固定高度 + 显式 logo 尺寸，防撑高） ---------- */
 .topbar {
   background-color: #9d2235;
   background-image: var(--header-art, none), linear-gradient(135deg, var(--primary-d) 0%, var(--primary) 55%, var(--primary-l) 100%);
@@ -81,6 +89,10 @@ body {
   position: sticky;
   top: 0;
   z-index: 30;
+  /* 紧凑锁：硬上限 88px，保底 64px；overflow:hidden 防子元素撑破 */
+  min-height: 64px;
+  max-height: 88px;
+  overflow: hidden;
 }
 .topbar-inner,
 .token-bar {
@@ -90,19 +102,48 @@ body {
   padding-right: 24px;
 }
 .topbar-inner {
-  padding-top: 16px;
-  padding-bottom: 16px;
+  padding-top: 12px;
+  padding-bottom: 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  min-height: 64px;          /* 与 .topbar 对齐，避免被任何子元素拉高 */
 }
-.brand { display: flex; align-items: center; gap: 14px; }
-.brand-logo { display: inline-flex; flex-shrink: 0; filter: drop-shadow(0 2px 4px rgb(0 0 0 / .18)); }
-.brand-logo svg { display: block; border-radius: 50%; }
-.brand-text { display: flex; flex-direction: column; }
-.brand h1 { margin: 0; font-size: 1.3rem; font-weight: 700; letter-spacing: 0.01em; font-family: var(--serif); }
-.subtitle { margin: 3px 0 0; font-size: 0.75rem; opacity: .85; letter-spacing: 0.02em; }
+.brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+/* 显式 logo 尺寸：堵死 SVG 失控变大的口子 */
+.brand-logo {
+  display: inline-flex;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  filter: drop-shadow(0 2px 4px rgb(0 0 0 / .18));
+}
+.brand-logo img,
+.brand-logo svg { display: block; width: 100%; height: 100%; border-radius: 50%; }
+.brand-text { display: flex; flex-direction: column; min-width: 0; }
+.brand h1 {
+  margin: 0;
+  font-size: 1.1rem;        /* 紧凑：1.3 → 1.1 */
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  font-family: var(--serif);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.subtitle {
+  margin: 2px 0 0;
+  font-size: 0.7rem;        /* 紧凑：0.75 → 0.7 */
+  opacity: .85;
+  letter-spacing: 0.02em;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 .token-bar {
   padding-bottom: 12px;
@@ -143,12 +184,16 @@ body {
 .user-menu .btn:hover { background: rgba(255,255,255,.22); }
 .dropdown {
   position: absolute; right: 0; top: calc(100% + 8px); min-width: 170px;
-  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
-  box-shadow: var(--shadow-md); padding: 6px; z-index: 40;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+  box-shadow: 0 8px 24px -4px rgb(15 23 42 / 0.14), 0 2px 6px -2px rgb(15 23 42 / 0.08);
+  padding: 6px; z-index: 40;
+  transform-origin: top right;
+  animation: filterIn var(--motion);
 }
 .dropdown-item {
   display: block; width: 100%; text-align: left; border: none; background: none;
-  padding: 9px 12px; border-radius: var(--radius-sm); cursor: pointer; font-size: 13px; color: var(--ink);
+  padding: 8px 12px; border-radius: var(--radius-sm); cursor: pointer; font-size: 13px; color: var(--ink);
+  transition: background-color var(--motion-fast);
 }
 .dropdown-item:hover { background: var(--primary-subtle); }
 .muted-tag {
@@ -211,6 +256,13 @@ body {
   border: 1px solid var(--line);
   position: relative;
   overflow: hidden;
+  transition: transform var(--motion), box-shadow var(--motion), border-color var(--motion);
+}
+/* Apple 范式：悬停微浮起 1px + 阴影加深 */
+.stat-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px -4px rgb(15 23 42 / 0.12), 0 2px 6px -2px rgb(15 23 42 / 0.08);
+  border-color: var(--line-strong);
 }
 .stat-card::before {
   content: "";
@@ -251,47 +303,63 @@ body {
 .filter-trigger {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 8px 12px;
-  border: 1px solid var(--line); border-radius: var(--radius-sm);
-  background: var(--surface); font-size: 13px; color: var(--ink);
+  border: 1px solid var(--line); border-radius: 999px;
+  background: var(--bg); font-size: 13px; color: var(--ink);
   box-shadow: var(--shadow-sm); cursor: pointer; white-space: nowrap;
-  transition: border-color .15s ease;
+  transition: background-color var(--motion-fast), border-color var(--motion), box-shadow var(--motion);
 }
-.filter-trigger:hover { border-color: var(--line-strong); }
+/* Apple 范式：chip 悬停背景微亮 */
+.filter-trigger:hover { background: var(--primary-subtle); border-color: var(--line-strong); }
+.filter-trigger:active { transform: translateY(1px); }
 .filter-group:has(.filter-dropdown:not(.hidden)) .filter-trigger {
-  border-color: var(--primary); box-shadow: 0 0 0 3px rgb(157 34 53 / .12);
+  border-color: var(--primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 12%, transparent);
+  background: var(--primary-subtle);
 }
 .filter-label { color: var(--muted); font-weight: 500; }
 .filter-value { font-weight: 600; color: var(--primary-d); }
 .filter-chevron { color: var(--muted); font-size: 10px; }
 .filter-dropdown {
   position: absolute; top: calc(100% + 6px); left: 0; z-index: 35;
-  min-width: 180px; max-height: 320px; overflow: auto;
+  min-width: 190px; max-height: 320px; overflow: auto;
   background: var(--surface); border: 1px solid var(--line);
-  border-radius: var(--radius); box-shadow: var(--shadow-md); padding: 8px;
+  border-radius: 14px;
+  box-shadow: 0 8px 24px -4px rgb(15 23 42 / 0.14), 0 2px 6px -2px rgb(15 23 42 / 0.08);
+  padding: 6px;
+  transform-origin: top center;
+  animation: filterIn var(--motion);
+}
+@keyframes filterIn {
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 .filter-opt {
   display: flex; align-items: center; gap: 8px;
-  padding: 7px 8px; border-radius: var(--radius-sm); cursor: pointer;
+  padding: 8px 10px; border-radius: var(--radius-sm); cursor: pointer;
   font-size: 13px; color: var(--ink); white-space: nowrap;
+  transition: background-color var(--motion-fast);
 }
 .filter-opt:hover { background: var(--primary-subtle); }
+.filter-opt:has(input:checked) { color: var(--primary-d); font-weight: 600; }
 .filter-opt input { accent-color: var(--primary); width: 15px; height: 15px; }
 .filter-foot {
-  display: flex; gap: 8px; margin-top: 6px; padding-top: 8px;
+  display: flex; gap: 8px; margin-top: 4px; padding-top: 8px;
   border-top: 1px solid var(--line);
 }
 .filter-mini {
   flex: 1; padding: 5px 8px; border: 1px solid var(--line-strong);
   background: var(--surface); border-radius: var(--radius-sm);
   font-size: 12px; color: var(--muted); cursor: pointer;
+  transition: background-color var(--motion-fast), color var(--motion-fast);
 }
 .filter-mini:hover { background: var(--bg); color: var(--ink); }
 .filter-radio {
   display: block; width: 100%; text-align: left;
   padding: 8px 10px; border: none; background: none; cursor: pointer;
   font-size: 13px; color: var(--ink); border-radius: var(--radius-sm);
+  transition: background-color var(--motion-fast);
 }
 .filter-radio:hover { background: var(--primary-subtle); }
+.filter-radio:focus-visible { outline-offset: -2px; }
 .filter-radio.active { background: var(--primary); color: #fff; font-weight: 600; }
 
 /* ---------- 按钮 ---------- */
@@ -302,19 +370,23 @@ body {
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color .15s ease, border-color .15s ease, transform .05s ease;
+  transition: background-color var(--motion), border-color var(--motion), box-shadow var(--motion), transform var(--motion-fast);
   white-space: nowrap;
   line-height: 1.4;
 }
+/* Apple 范式：按下时内容下移 1px 给出"物理按压"反馈 */
 .btn:active { transform: translateY(1px); }
 .btn-primary {
   background: var(--primary);
   color: #fff;
-  box-shadow: 0 1px 2px rgb(157 34 53 / .25);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--primary) 25%, transparent);
 }
-.btn-primary:hover { background: var(--primary-d); }
+/* Apple 范式：悬停变浅（示意可激活），按下变深（示意已按下） */
+.btn-primary:hover { background: var(--primary-hover); }
+.btn-primary:active { background: var(--primary-pressed); }
 .btn-ghost { background: var(--surface); border-color: var(--line-strong); color: var(--ink); }
-.btn-ghost:hover { background: #faf6f4; border-color: var(--line-strong); }
+.btn-ghost:hover { background: var(--bg); border-color: var(--line-strong); }
+.btn-ghost:active { background: var(--line); }
 
 /* ---------- 表格 ---------- */
 .table-wrap {
@@ -386,7 +458,9 @@ body {
 .owner-card {
   background: var(--surface); border: 1px solid var(--line);
   border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: hidden;
+  transition: transform var(--motion), box-shadow var(--motion), border-color var(--motion);
 }
+.owner-card:hover { transform: translateY(-1px); box-shadow: 0 8px 24px -4px rgb(15 23 42 / 0.10); }
 .owner-card.is-me { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary), var(--shadow); }
 .owner-head {
   display: flex; align-items: center; gap: 10px;
@@ -494,13 +568,20 @@ body {
 .link-btn.del { color: var(--bad); }
 
 /* ---------- 弹窗 ---------- */
-.modal { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 50; }
+/* Apple 范式：背板淡入 + 卡片从中心放大淡入（0.2s ease） */
+.modal { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 50; animation: modalFade var(--motion); }
+@keyframes modalFade { from { opacity: 0; } to { opacity: 1; } }
 .modal-backdrop { position: absolute; inset: 0; background: rgba(15,23,42,.45); }
 .modal-card {
   position: relative; background: var(--surface); border-radius: var(--radius-lg);
   width: min(560px, 94vw); max-height: 92vh; overflow: auto;
   box-shadow: 0 20px 50px rgba(15,23,42,.25);
   border: 1px solid var(--line);
+  animation: modalCardIn var(--motion);
+}
+@keyframes modalCardIn {
+  from { transform: scale(0.96); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
 }
 .modal-head {
   display: flex; justify-content: space-between; align-items: center;
@@ -530,6 +611,11 @@ body {
   position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%);
   background: #111827; color: #fff; padding: 10px 18px; border-radius: var(--radius);
   font-size: 13px; box-shadow: 0 8px 24px rgba(15,23,42,.25); z-index: 60;
+  animation: toastIn var(--motion);
+}
+@keyframes toastIn {
+  from { opacity: 0; transform: translate(-50%, 8px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
 }
 
 /* 注册弹窗 Tab */
@@ -767,4 +853,14 @@ body {
   .usage-member .u-counts { margin-left: 0; width: 100%; }
   .onboard-stage { min-height: 260px; padding: 22px 18px 8px; }
   .onboard-illu { width: 96px; height: 96px; }
+}
+
+/* ---------- 尊重系统「减弱动态」设置 ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .stat-card:hover, .owner-card:hover { transform: none; }
 }
