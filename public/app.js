@@ -20,13 +20,25 @@ const state = {
     status: new Set(),       // 空=全部
     owner: new Set(),        // 空=全部
     quartile: new Set(),     // 空=全部
-    deadline: "",            // 空=全部 | overdue | today | week | month
-    sort: "updated",         // updated | submitted | deadline | impact | owner
+    sort: "updated",         // updated | status | owner
   },
   openFilter: null,          // 当前打开的下拉 id
 };
 
 const $ = (id) => document.getElementById(id);
+
+// SCI 投稿进度中文 → 英文对照（与后端 papers.js 保持一致）
+const STATUS_EN = {
+  "草稿": "Draft",
+  "已投稿": "Submitted",
+  "编辑处理中": "With Editor",
+  "审稿中": "Under Review",
+  "决定中": "Decision in Process",
+  "返修": "Revision",
+  "接收": "Accepted",
+  "拒稿": "Rejected",
+  "已发表": "Published",
+};
 
 // ---------- 工具 ----------
 function toast(msg) {
@@ -40,16 +52,6 @@ function toast(msg) {
 function fmtDate(s) {
   if (!s) return "—";
   return String(s).slice(0, 10);
-}
-
-function daysUntil(dateStr) {
-  if (!dateStr) return null;
-  const parts = String(dateStr).split("-");
-  if (parts.length !== 3) return null;
-  const target = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])).getTime();
-  const now = new Date();
-  const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-  return Math.round((target - startToday) / 86400000);
 }
 
 function relTime(iso) {
@@ -188,8 +190,8 @@ async function doLogout() {
 }
 
 // ---------- 注册 / 加入 ----------
-function openReg() { resetRegForm(); $("regModal").classList.remove("hidden"); }
-function closeReg() { $("regModal").classList.add("hidden"); }
+function openReg() { resetRegForm(); openDialog($("regModal"), closeReg); }
+function closeReg() { closeDialog($("regModal")); }
 
 function setRegMode(mode) {
   state.regMode = mode;
@@ -237,35 +239,38 @@ async function submitReg(e) {
 }
 
 // ---------- 使用说明引导向导（首次访问自动弹出，分片指导） ----------
+// 插图画品牌键：渲染时按当前品牌解析（null 则回退到品牌 logo），中性主题默认不显示专属图
 const ONBOARD_SLIDES = [
-  { title: "欢迎使用 · 课题组投稿进度看板", illu: "./xmu-building.svg",
+  { title: "欢迎使用 · 课题组投稿进度看板", illu: "headerArt",
     text: "这是一块<b>课题组共享</b>的看板：导师与同门在同一块板上，透明追踪每篇论文的投稿状态。本组进度仅本组成员可见。" },
-  { title: "第一步：注册 / 加入课题组", illu: "./logo-xmu.svg",
+  { title: "第一步：注册 / 加入课题组", illu: "logo",
     text: "点右上角「<b>注册 / 加入</b>」。有邀请码选「凭邀请码加入」；要新建课题组选「创建课题组」，创建者即管理员，并自动获得邀请码，可发给师姐、师妹、导师。" },
-  { title: "第二步：添加你的论文", illu: "./phoenix-flower.svg",
-    text: "登录后点「<b>添加论文</b>」，填写题目、期刊、影响因子、分区与进度。论文会按「负责人」（你的姓名）自动归入你的专属小框。" },
-  { title: "第三步：看懂看板", illu: "./xmu-stat-bg.svg",
-    text: "每位成员一张卡片，展示其论文；可按<b>进度 / 成员 / 分区</b>筛选、排序、搜索。顶部统计卡显示整体：总数、接收/已发表、审稿中、返修中。" },
-  { title: "第四步：课题组管理 & 隐私", illu: "./logo-xmu.svg",
+  { title: "第二步：添加你的论文", illu: "phoenixFlower",
+    text: "登录后点「<b>添加论文</b>」，填写题目、期刊、第一作者、通讯作者、JCR分区与投稿进度。论文会按「负责人」（你的姓名）自动归入你的专属小框。" },
+  { title: "第三步：看懂看板", illu: "statBg",
+    text: "每位成员一张卡片，展示其论文；可按<b>进度 / 成员 / JCR分区</b>筛选、排序、搜索。顶部统计卡显示整体：总数、接收/已发表、审稿中、返修中。" },
+  { title: "第四步：课题组管理 & 隐私", illu: "logo",
     text: "管理员点「<b>课题组管理</b>」可生成邀请码、调整成员角色、移除成员。同组默认<b>可见彼此论文</b>；想只看自己，点右上角头像 → 「只看我的」。" },
-  { title: "开始使用吧", illu: "./phoenix-flower.svg",
+  { title: "开始使用吧", illu: "phoenixFlower",
     text: "现在就去右上角「注册 / 加入」，创建或加入你的第一个课题组，添加第一篇论文。随时可点右上角「使用说明」重温本向导。" },
 ];
 let onboardIdx = 0;
 function onboardRender() {
   const s = ONBOARD_SLIDES[onboardIdx];
+  const a = ((window.BRAND || window.BRAND_DEFAULT).assets) || {};
+  const illu = a[s.illu] || a.logo || null;
   $("onboardStage").innerHTML =
-    `<img class="onboard-illu" src="${s.illu}" alt="" />
-     <h3 class="onboard-step-title">${esc(s.title)}</h3>
+    (illu ? `<img class="onboard-illu" src="${esc(illu)}" alt="" />` : "") +
+    `<h3 class="onboard-step-title">${esc(s.title)}</h3>
      <p class="onboard-step-text">${s.text}</p>`;
   $("onboardDots").innerHTML = ONBOARD_SLIDES.map((_, i) =>
     `<span class="dot ${i === onboardIdx ? "active" : ""}"></span>`).join("");
   $("onboardPrev").style.visibility = onboardIdx === 0 ? "hidden" : "visible";
   $("onboardNext").textContent = onboardIdx === ONBOARD_SLIDES.length - 1 ? "开始使用" : "下一步";
 }
-function openOnboard() { onboardIdx = 0; onboardRender(); $("onboardModal").classList.remove("hidden"); }
+function openOnboard() { onboardIdx = 0; onboardRender(); openDialog($("onboardModal"), closeOnboard); }
 function closeOnboard(done) {
-  $("onboardModal").classList.add("hidden");
+  closeDialog($("onboardModal"));
   if (done) { try { localStorage.setItem("pt_onboarded", "1"); } catch (e) {} }
 }
 function onboardNext() {
@@ -303,7 +308,9 @@ function render() { renderStats(); renderFilterBar(); renderBoards(); }
 function renderStats() {
   const p = state.filtered;
   const count = (s) => p.filter((x) => x.status === s).length;
+  const procStates = ["编辑处理中", "审稿中", "决定中"];
   $("statTotal").textContent = p.length;
+  $("statProcessing").textContent = p.filter((x) => procStates.includes(x.status)).length;
   $("statAccepted").textContent = count("接收") + count("已发表");
   $("statReview").textContent = count("审稿中");
   $("statRevision").textContent = count("返修");
@@ -316,31 +323,20 @@ function applyFilters() {
 
   const out = state.papers.filter((p) => {
     if (q) {
-      const hay = [p.title, p.journal, p.note, p.owner_name].filter(Boolean).join(" ").toLowerCase();
+      const hay = [p.title, p.journal, p.first_author, p.corresponding_author, p.note, p.owner_name].filter(Boolean).join(" ").toLowerCase();
       if (!hay.includes(q)) return false;
     }
     if (f.status.size && !f.status.has(p.status || "")) return false;
     if (f.owner.size && !f.owner.has(p.owner_name || "未分配")) return false;
     if (f.quartile.size && !f.quartile.has(p.quartile || "待定")) return false;
-    if (f.deadline) {
-      const d = daysUntil(p.revision_deadline);
-      if (f.deadline === "overdue" && !(d !== null && d < 0)) return false;
-      if (f.deadline === "today" && !(d === 0)) return false;
-      if (f.deadline === "week" && !(d !== null && d >= 0 && d <= 7)) return false;
-      if (f.deadline === "month" && !(d !== null && d >= 0 && d <= 30)) return false;
-    }
     return true;
   });
 
   const s = f.sort;
+  // 进度排序：按 SCI 投稿阶段的自然顺序（越靠后越"进展越大"）
+  const statusRank = (st) => Object.keys(STATUS_EN).indexOf(st);
   out.sort((a, b) => {
-    if (s === "submitted") return String(b.submitted_at || "").localeCompare(String(a.submitted_at || ""));
-    if (s === "deadline") {
-      const da = a.revision_deadline ? new Date(a.revision_deadline).getTime() : Infinity;
-      const db = b.revision_deadline ? new Date(b.revision_deadline).getTime() : Infinity;
-      return da - db;
-    }
-    if (s === "impact") return (Number(b.impact_factor) || 0) - (Number(a.impact_factor) || 0);
+    if (s === "status") return statusRank(a.status) - statusRank(b.status);
     if (s === "owner") return String(a.owner_name || "").localeCompare(String(b.owner_name || ""), "zh");
     return String(b.updated_at || "").localeCompare(String(a.updated_at || ""));
   });
@@ -355,11 +351,8 @@ function summarize(set, allLabel) {
   if (set.size <= 2) return [...set].join("、");
   return [...set].slice(0, 2).join("、") + ` 等 ${set.size} 项`;
 }
-function deadlineLabel(v) {
-  return { overdue: "已逾期", today: "今天到期", week: "7天内", month: "30天内" }[v] || "全部";
-}
 function sortLabel(v) {
-  return { updated: "最近更新", submitted: "投稿时间", deadline: "返修截止", impact: "影响因子", owner: "负责人" }[v] || "最近更新";
+  return { updated: "最近更新", status: "投稿进度", owner: "负责人" }[v] || "最近更新";
 }
 
 // 渲染筛选栏（下拉内容 + 触发按钮文案）
@@ -379,25 +372,14 @@ function renderFilterBar() {
   $("fvOwner").textContent = summarize(f.owner, "全部成员");
   buildChecklist("fdOwner", owners, f.owner, () => { $("fvOwner").textContent = summarize(f.owner, "全部成员"); });
 
-  // 分区
+  // JCR分区
   $("fvQuartile").textContent = summarize(f.quartile, "全部");
   buildChecklist("fdQuartile", quartiles, f.quartile, () => { $("fvQuartile").textContent = summarize(f.quartile, "全部"); });
-
-  // 截止时间（单选）
-  $("fvDeadline").textContent = deadlineLabel(f.deadline);
-  const deadlineOpts = [
-    { v: "", t: "全部" }, { v: "overdue", t: "已逾期" },
-    { v: "today", t: "今天到期" }, { v: "week", t: "7天内" }, { v: "month", t: "30天内" },
-  ];
-  buildRadio("fdDeadline", deadlineOpts, f.deadline, (v) => {
-    f.deadline = v; $("fvDeadline").textContent = deadlineLabel(v); applyFilters();
-  });
 
   // 排序（单选）
   $("fvSort").textContent = sortLabel(f.sort);
   const sortOpts = [
-    { v: "updated", t: "最近更新" }, { v: "submitted", t: "投稿时间" },
-    { v: "deadline", t: "返修截止" }, { v: "impact", t: "影响因子" }, { v: "owner", t: "负责人" },
+    { v: "updated", t: "最近更新" }, { v: "status", t: "投稿进度" }, { v: "owner", t: "负责人" },
   ];
   buildRadio("fdSort", sortOpts, f.sort, (v) => {
     f.sort = v; $("fvSort").textContent = sortLabel(v); applyFilters();
@@ -444,32 +426,41 @@ function buildRadio(domId, options, current, onPick) {
   });
 }
 
+function syncFilterAria() {
+  document.querySelectorAll(".filter-trigger").forEach((btn) => {
+    const target = btn.getAttribute("data-target");
+    const box = $(target);
+    btn.setAttribute("aria-controls", target);
+    btn.setAttribute("aria-expanded", box ? String(!box.classList.contains("hidden")) : "false");
+  });
+}
 function closeFilterDropdowns() {
   document.querySelectorAll(".filter-dropdown").forEach((d) => d.classList.add("hidden"));
   state.openFilter = null;
+  syncFilterAria();
 }
 function toggleFilterDropdown(id) {
   const box = $(id);
   const willOpen = box.classList.contains("hidden");
   closeFilterDropdowns();
   if (willOpen) { box.classList.remove("hidden"); state.openFilter = id; }
+  syncFilterAria();
 }
 
+// 状态徽章：仅当状态是已知白名单值时附加样式类，其余一律走"未知"样式，
+// 避免把用户可控字符串拼进 class 属性（存储型 XSS）。
 function badge(status) {
-  const cls = "badge s-" + String(status || "").replace(/\s/g, "");
-  return `<span class="${cls}">${esc(status || "—")}</span>`;
+  const known = Object.prototype.hasOwnProperty.call(STATUS_EN, status);
+  const cls = known ? "badge s-" + String(status).replace(/\s/g, "") : "badge";
+  const en = known ? STATUS_EN[status] : "";
+  const enHtml = en ? `<span class="badge-en">${esc(en)}</span>` : "";
+  return `<span class="${cls}">${esc(status || "—")}${enHtml}</span>`;
 }
+// 分区徽章：同上，白名单外的值不拼进 class
 function qBadge(q) {
-  const cls = "q-badge q-" + String(q || "");
+  const VALID_Q = ["Q1", "Q2", "Q3", "Q4", "待定"];
+  const cls = VALID_Q.includes(q) ? "q-badge q-" + q : "q-badge";
   return `<span class="${cls}">${esc(q || "—")}</span>`;
-}
-function deadlineCell(p) {
-  if (!p.revision_deadline) return "—";
-  const d = daysUntil(p.revision_deadline);
-  if (d === null) return "—";
-  if (d < 0) return `<span class="dl overdue">已逾期 ${Math.abs(d)} 天</span>`;
-  if (d <= 7) return `<span class="dl urgent">距截止 ${d} 天</span>`;
-  return `<span class="dl">距截止 ${d} 天</span>`;
 }
 
 function canEdit(p) {
@@ -521,17 +512,25 @@ function renderBoards() {
                  <button class="link-btn del" data-del="${p.id}">删除</button>
                </div>`
             : `<span class="muted-tag">只读</span>`;
+          const logHtml = (p.status_log && p.status_log.length)
+            ? `<div class="status-log" data-log="${esc(p.id)}" title="展开状态变更时间线">▾ 进度时间线 (${p.status_log.length})</div>
+               <ul class="status-log-body hidden">${p.status_log.map((l) => `
+                 <li><span class="sl-at">${fmtDate(l.at)}</span>
+                 <span class="sl-flow">${l.from ? esc(l.from) + " → " : ""}${esc(l.to)}</span>
+                 <span class="sl-actor">${esc(l.actor || "—")}</span>
+                 ${l.note ? `<span class="sl-note">${esc(l.note)}</span>` : ""}</li>`).join("")}</ul>`
+            : "";
           return `<tr>
             <td class="title-cell" data-label="论文题目">${esc(p.title)}</td>
             <td class="journal-cell" data-label="期刊名称">${esc(p.journal || "—")}</td>
-            <td class="num" data-label="影响因子">${p.impact_factor != null ? esc(p.impact_factor) : "—"}</td>
-            <td data-label="分区">${qBadge(p.quartile)}</td>
+            <td data-label="第一作者">${esc(p.first_author || "—")}</td>
+            <td data-label="通讯作者">${esc(p.corresponding_author || "—")}</td>
+            <td data-label="JCR分区">${qBadge(p.quartile)}</td>
             <td data-label="投稿进度">${badge(p.status)}</td>
-            <td data-label="投稿时间">${fmtDate(p.submitted_at)}</td>
-            <td data-label="返修截止">${deadlineCell(p)}</td>
             <td data-label="最近更新">${relTime(p.updated_at)}</td>
             <td class="op-col" data-label="操作">${op}</td>
-          </tr>`;
+          </tr>
+          <tr class="log-row"><td colspan="8">${logHtml}</td></tr>`;
         })
         .join("");
       // 小框头部"添加论文"：本人可见；管理员对任意成员的小框都可见
@@ -552,11 +551,10 @@ function renderBoards() {
             <thead><tr>
               <th>论文题目</th>
               <th>期刊名称</th>
-              <th class="num">影响因子</th>
-              <th>分区</th>
+              <th>第一作者</th>
+              <th>通讯作者</th>
+              <th>JCR分区</th>
               <th>投稿进度</th>
-              <th>投稿时间</th>
-              <th>返修截止</th>
               <th>最近更新</th>
               <th class="op-col">操作</th>
             </tr></thead>
@@ -567,6 +565,53 @@ function renderBoards() {
     })
     .join("");
 }
+
+// ---------- 无障碍：弹窗焦点管理 ----------
+// 打开弹窗时记录触发元素并把焦点移入弹窗；关闭时归还焦点；
+// Esc 关闭最上层弹窗（无弹窗时关闭所有下拉）；Tab 在弹窗内循环（focus trap）。
+const _dlgStack = [];
+const _FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+function _focusables(el) {
+  return Array.from(el.querySelectorAll(_FOCUSABLE)).filter((n) => n.getClientRects().length > 0 || n === document.activeElement);
+}
+
+function openDialog(el, closeFn) {
+  el.classList.remove("hidden");
+  _dlgStack.push({ el, close: closeFn, prev: document.activeElement });
+  const first = _focusables(el)[0];
+  if (first) first.focus();
+  else { el.setAttribute("tabindex", "-1"); el.focus(); }
+}
+
+function closeDialog(el) {
+  const top = _dlgStack.length ? _dlgStack[_dlgStack.length - 1] : null;
+  if (top && top.el === el) _dlgStack.pop();
+  el.classList.add("hidden");
+  if (top && top.el === el && top.prev && document.contains(top.prev)) top.prev.focus();
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    if (_dlgStack.length) {
+      const top = _dlgStack[_dlgStack.length - 1];
+      e.preventDefault();
+      (top.close || (() => closeDialog(top.el)))();
+    } else {
+      closeFilterDropdowns();
+      closeDropdown();
+    }
+    return;
+  }
+  if (e.key === "Tab" && _dlgStack.length) {
+    const dlg = _dlgStack[_dlgStack.length - 1].el;
+    const f = _focusables(dlg);
+    if (!f.length) { e.preventDefault(); return; }
+    const first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
+});
 
 // ---------- 弹窗控制 ----------
 // ownerId/ownerName：添加时归属谁（默认为当前用户；管理员可在某人的小框里帮他添加）
@@ -586,30 +631,37 @@ function openModal(record, ownerId, ownerName) {
   $("f_id").value = record ? record.id : "";
   $("f_title").value = record ? record.title : "";
   $("f_journal").value = record ? record.journal || "" : "";
-  $("f_impact_factor").value = record && record.impact_factor != null ? record.impact_factor : "";
+  $("f_first_author").value = record ? (record.first_author || "") : "";
+  $("f_corresponding_author").value = record ? (record.corresponding_author || "") : "";
   $("f_quartile").value = record ? record.quartile || "待定" : "待定";
   $("f_status").value = record ? record.status || "草稿" : "草稿";
+  $("f_status_note").value = "";
   $("f_owner").value = state.targetOwnerName || "";
-  $("f_submitted_at").value = record ? (record.submitted_at || "").slice(0, 10) : "";
-  $("f_revision_deadline").value = record ? (record.revision_deadline || "").slice(0, 10) : "";
   $("f_note").value = record ? record.note || "" : "";
-  $("modal").classList.remove("hidden");
+  openDialog($("modal"), closeModal);
   $("f_title").focus();
 }
 // 在某人的小框里点"+ 添加论文"：直接归属给那个人
 function openAddFor(ownerId, ownerName) {
   openModal(null, ownerId, ownerName);
 }
-function closeModal() { $("modal").classList.add("hidden"); state.editing = null; }
+function closeModal() { closeDialog($("modal")); state.editing = null; }
 
-function openLogin() { $("loginModal").classList.remove("hidden"); $("loginUser").focus(); }
-function closeLogin() { $("loginModal").classList.add("hidden"); }
+function openLogin() { openDialog($("loginModal"), closeLogin); $("loginUser").focus(); }
+function closeLogin() { closeDialog($("loginModal")); }
 
-function openPw() { $("pwForm").reset(); $("pwModal").classList.remove("hidden"); }
-function closePw() { $("pwModal").classList.add("hidden"); }
+function openPw() { $("pwForm").reset(); openDialog($("pwModal"), closePw); }
+function closePw() { closeDialog($("pwModal")); }
 
-function toggleDropdown() { $("userDropdown").classList.toggle("hidden"); }
-function closeDropdown() { $("userDropdown").classList.add("hidden"); }
+function toggleDropdown() {
+  const box = $("userDropdown");
+  box.classList.toggle("hidden");
+  $("userBtn").setAttribute("aria-expanded", String(!box.classList.contains("hidden")));
+}
+function closeDropdown() {
+  $("userDropdown").classList.add("hidden");
+  $("userBtn").setAttribute("aria-expanded", "false");
+}
 
 // ---------- 课题组管理 ----------
 function openTeam() {
@@ -622,9 +674,9 @@ function openTeam() {
   document.querySelector(".invite-gen").classList.toggle("hidden", !isAdmin);
   loadMembers();
   loadInvites();
-  $("teamModal").classList.remove("hidden");
+  openDialog($("teamModal"), closeTeam);
 }
-function closeTeam() { $("teamModal").classList.add("hidden"); }
+function closeTeam() { closeDialog($("teamModal")); }
 
 async function loadMembers() {
   const { ok, data } = await api("GET", "/teams/" + encodeURIComponent(state.currentTeam) + "/members");
@@ -731,7 +783,7 @@ function renderUsage() {
   // 1) 整体统计卡（按状态分布）
   const byStatus = {};
   for (const p of papers) { const s = p.status || "草稿"; byStatus[s] = (byStatus[s] || 0) + 1; }
-  const statusOrder = ["草稿", "已投稿", "审稿中", "返修", "接收", "拒稿", "已发表"];
+  const statusOrder = ["草稿", "已投稿", "编辑处理中", "审稿中", "决定中", "返修", "接收", "拒稿", "已发表"];
   const chip = (label, num) => `<span class="usage-chip">${label} <b>${num}</b></span>`;
   let chips = chip("论文总数", papers.length);
   for (const s of statusOrder) if (byStatus[s]) chips += chip(s, byStatus[s]);
@@ -782,7 +834,7 @@ function renderUsage() {
       return `<div class="activity-row">
         <span class="a-who">${esc(p.owner_name || "未分配")}</span>
         <span class="a-title">《${esc(p.title || "未命名论文")}》</span>
-        <span class="badge s-${st}">${esc(st)}</span>
+        ${badge(st)}
         <span class="a-time">${timeAgo(p.updated_at)}</span>
       </div>`;
     }).join("");
@@ -809,11 +861,11 @@ async function submitPaper(e) {
   const body = {
     title: $("f_title").value.trim(),
     journal: $("f_journal").value.trim(),
-    impact_factor: $("f_impact_factor").value,
+    first_author: $("f_first_author").value.trim(),
+    corresponding_author: $("f_corresponding_author").value.trim(),
     quartile: $("f_quartile").value,
     status: $("f_status").value,
-    submitted_at: $("f_submitted_at").value,
-    revision_deadline: $("f_revision_deadline").value,
+    status_note: $("f_status_note").value.trim(),
     note: $("f_note").value.trim(),
   };
   if (!body.title) return toast("论文题目不能为空");
@@ -924,8 +976,15 @@ function bind() {
   $("addBtn").addEventListener("click", () => openModal(null));
   $("sampleBtn").addEventListener("click", loadSample);
 
-  // 表格内编辑/删除 + 小框"添加论文"（事件委托）
+  // 表格内编辑/删除 + 小框"添加论文" + 进度时间线展开（事件委托）
   $("boards").addEventListener("click", (e) => {
+    const logTrigger = e.target.closest(".status-log");
+    if (logTrigger) {
+      const body = logTrigger.parentElement.querySelector(".status-log-body");
+      if (body) body.classList.toggle("hidden");
+      logTrigger.classList.toggle("open");
+      return;
+    }
     const ed = e.target.getAttribute("data-edit");
     const del = e.target.getAttribute("data-del");
     const addId = e.target.getAttribute("data-addid");
@@ -952,6 +1011,56 @@ function debounce(fn, ms) {
   return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
 }
 
+// ---------- 品牌注入（开源可换机构，详见 public/brand.js） ----------
+function setText(id, txt) {
+  const el = $(id);
+  if (el) el.textContent = txt;
+}
+
+function applyBrand() {
+  const B = window.BRAND || window.BRAND_DEFAULT;
+  const root = document.documentElement;
+
+  // 1) 主题色注入为 CSS 变量（styles.css 已引用这些变量，来源由此控制）
+  if (B.colors) {
+    root.style.setProperty("--primary", B.colors.primary);
+    root.style.setProperty("--primary-d", B.colors.primaryDark);
+    root.style.setProperty("--primary-l", B.colors.primaryLight || B.colors.primary);
+    root.style.setProperty("--primary-subtle", B.colors.primarySubtle);
+  }
+
+  // 2) 文本：浏览器标题、顶栏副标题、页脚题字
+  document.title = B.title || document.title;
+  setText("brandSubtitle", (B.orgName ? B.orgName + " · " : "") + "导师引导 · 投稿进度透明看板");
+  setText("footerText", B.footerText);
+
+  // 3) 品牌图形：logo / 机构名 / 英文标准字（null 表示不显示）
+  const a = B.assets || {};
+  document.querySelectorAll(".brand-logo-img, #brandLogo").forEach((img) => {
+    if (a.logo) { img.src = a.logo; img.alt = B.orgName || ""; img.style.display = ""; }
+    else { img.style.display = "none"; }
+  });
+  document.querySelectorAll(".brand-name").forEach((e) => (e.textContent = B.orgName || ""));
+  document.querySelectorAll(".brand-en").forEach((e) => (e.textContent = B.orgNameEn || ""));
+
+  // 页脚建筑图
+  const fa = $("footerArt");
+  if (fa) { if (a.footerArt) { fa.src = a.footerArt; fa.style.display = ""; } else { fa.style.display = "none"; } }
+
+  // 凤凰花点缀（添加按钮图标 + 空状态图）
+  document.querySelectorAll(".js-phx").forEach((img) => {
+    if (a.phoenixFlower) { img.src = a.phoenixFlower; img.style.display = ""; }
+    else { img.style.display = "none"; }
+  });
+
+  // 4) 装饰图（顶栏 / 弹窗横幅 / 统计卡 / 背景）通过 CSS 变量控制；null 退回纯色（视觉减法）
+  const setVar = (name, val) => root.style.setProperty(name, val || "none");
+  setVar("--header-art", a.headerArt ? `url("${a.headerArt}")` : "none");
+  setVar("--modal-banner", a.modalBanner ? `url("${a.modalBanner}")` : "none");
+  setVar("--stat-bg", a.statBg ? `url("${a.statBg}")` : "none");
+  setVar("--bg-pattern", a.bgPattern ? `url("${a.bgPattern}")` : "none");
+}
+
 // ---------- 启动 ----------
 // 兜底：任何未被捕获的 Promise 拒绝都给出可见提示，避免"点了没反应"却无任何反馈。
 window.addEventListener("unhandledrejection", (e) => {
@@ -960,6 +1069,7 @@ window.addEventListener("unhandledrejection", (e) => {
 });
 
 bind();
+applyBrand();
 
 // 启动时若发现是直接双击 HTML 文件打开（file:// 协议），立即给出明确提示，
 // 避免后续所有 API 请求都报“Failed to fetch”却不知原因。

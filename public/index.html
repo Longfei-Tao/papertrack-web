@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>厦门大学 · 课题组论文投稿进度看板</title>
+  <title>课题组投稿进度看板</title>
   <link rel="stylesheet" href="./styles.css" />
   <link rel="preconnect" href="https://fonts.loli.net" crossorigin />
   <link href="https://fonts.loli.net/css2?family=Noto+Serif+SC:wght@500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet" />
@@ -12,27 +12,10 @@
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brand">
-        <span class="brand-logo" aria-hidden="true">
-          <svg viewBox="0 0 64 64" width="42" height="42" role="img" aria-label="厦门大学">
-            <circle cx="32" cy="32" r="31" fill="#9d2235"/>
-            <circle cx="32" cy="32" r="31" fill="none" stroke="#ffffff" stroke-opacity=".25" stroke-width="1.5"/>
-            <g fill="#ffffff">
-              <path d="M20 34 a12 12 0 0 1 24 0 Z"/>
-              <rect x="20" y="34" width="24" height="3.4"/>
-              <rect x="21" y="37.4" width="22" height="9"/>
-              <rect x="18" y="46.4" width="28" height="3"/>
-            </g>
-            <g stroke="#9d2235" stroke-width="1.6">
-              <line x1="25" y1="38" x2="25" y2="46"/>
-              <line x1="32" y1="38" x2="32" y2="46"/>
-              <line x1="39" y1="38" x2="39" y2="46"/>
-            </g>
-            <text x="32" y="29.5" text-anchor="middle" fill="#ffffff" font-size="7" font-family="serif" font-weight="700">1921</text>
-          </svg>
-        </span>
+        <img id="brandLogo" class="brand-logo" alt="" />
         <div class="brand-text">
-          <h1>课题组论文投稿进度</h1>
-          <p class="subtitle">厦门大学 · 导师引导 · 投稿进度透明看板</p>
+          <h1 id="brandTitle">课题组论文投稿进度</h1>
+          <p class="subtitle" id="brandSubtitle">投稿进度透明看板</p>
         </div>
       </div>
       <div class="topbar-right">
@@ -44,7 +27,7 @@
           <button id="regBtn" class="btn btn-ghost">注册 / 加入</button>
           <button id="loginBtn" class="btn btn-ghost">登录</button>
           <div id="userMenu" class="user-menu hidden">
-            <button id="userBtn" class="btn btn-ghost"></button>
+            <button id="userBtn" class="btn btn-ghost" aria-haspopup="true" aria-expanded="false" aria-controls="userDropdown"></button>
             <div id="userDropdown" class="dropdown hidden">
               <button class="dropdown-item" data-act="mine">只看我的</button>
               <button class="dropdown-item" data-act="team">课题组管理</button>
@@ -61,6 +44,7 @@
     <!-- 顶部统计 -->
     <section class="stats" id="stats">
       <div class="stat-card"><div class="stat-num" id="statTotal">–</div><div class="stat-label">论文总数</div></div>
+      <div class="stat-card stat-proc"><div class="stat-num" id="statProcessing">–</div><div class="stat-label">处理中</div></div>
       <div class="stat-card stat-good"><div class="stat-num" id="statAccepted">–</div><div class="stat-label">接收/已发表</div></div>
       <div class="stat-card stat-warn"><div class="stat-num" id="statReview">–</div><div class="stat-label">审稿中</div></div>
       <div class="stat-card stat-rev"><div class="stat-num" id="statRevision">–</div><div class="stat-label">返修中</div></div>
@@ -71,7 +55,7 @@
       <div class="filters" id="filterBar">
         <!-- 进度多选 -->
         <div class="filter-group" id="fgStatus">
-          <button class="filter-trigger" type="button" data-target="fdStatus">
+          <button class="filter-trigger" type="button" aria-haspopup="true" data-target="fdStatus">
             <span class="filter-label">进度</span>
             <span class="filter-value" id="fvStatus">全部</span>
             <span class="filter-chevron">▾</span>
@@ -80,34 +64,25 @@
         </div>
         <!-- 成员多选 -->
         <div class="filter-group" id="fgOwner">
-          <button class="filter-trigger" type="button" data-target="fdOwner">
+          <button class="filter-trigger" type="button" aria-haspopup="true" data-target="fdOwner">
             <span class="filter-label">成员</span>
             <span class="filter-value" id="fvOwner">全部成员</span>
             <span class="filter-chevron">▾</span>
           </button>
           <div class="filter-dropdown hidden" id="fdOwner"></div>
         </div>
-        <!-- 分区多选 -->
+        <!-- JCR分区多选 -->
         <div class="filter-group" id="fgQuartile">
-          <button class="filter-trigger" type="button" data-target="fdQuartile">
-            <span class="filter-label">分区</span>
+          <button class="filter-trigger" type="button" aria-haspopup="true" data-target="fdQuartile">
+            <span class="filter-label">JCR分区</span>
             <span class="filter-value" id="fvQuartile">全部</span>
             <span class="filter-chevron">▾</span>
           </button>
           <div class="filter-dropdown hidden" id="fdQuartile"></div>
         </div>
-        <!-- 截止时间 -->
-        <div class="filter-group" id="fgDeadline">
-          <button class="filter-trigger" type="button" data-target="fdDeadline">
-            <span class="filter-label">截止时间</span>
-            <span class="filter-value" id="fvDeadline">全部</span>
-            <span class="filter-chevron">▾</span>
-          </button>
-          <div class="filter-dropdown hidden" id="fdDeadline"></div>
-        </div>
         <!-- 排序 -->
         <div class="filter-group" id="fgSort">
-          <button class="filter-trigger" type="button" data-target="fdSort">
+          <button class="filter-trigger" type="button" aria-haspopup="true" data-target="fdSort">
             <span class="filter-label">排序</span>
             <span class="filter-value" id="fvSort">最近更新</span>
             <span class="filter-chevron">▾</span>
@@ -119,14 +94,14 @@
       </div>
       <div class="actions">
         <button id="sampleBtn" class="btn btn-ghost hidden">载入示例数据</button>
-        <button id="addBtn" class="btn btn-primary hidden"><img src="./phoenix-flower.svg" alt="" class="btn-icon" />添加论文</button>
+        <button id="addBtn" class="btn btn-primary hidden"><img class="btn-icon js-phx" alt="" />添加论文</button>
       </div>
     </section>
 
     <!-- 每个人一个独立小框 -->
     <section class="boards" id="boards">
       <div class="board-empty">
-        <img src="./phoenix-flower.svg" alt="" class="empty-phx" />
+        <img class="empty-phx js-phx" alt="" />
         <p class="empty-title">正在读取本课题组的投稿进度</p>
         <p class="empty-sub">若长时间停留在此，请点右上角「登录」</p>
       </div>
@@ -134,21 +109,21 @@
     <p class="hint">本组进度仅本课题组成员登录后可见。未登录请点右上角「注册 / 加入」：有邀请码选「凭邀请码加入」，新课题组选「创建课题组」。</p>
   </main>
 
-  <footer class="xmu-footer">
-    <img src="./xmu-building.svg" alt="" class="footer-art" />
-    <p class="footer-text">学术长路 · 嘉庚为灯 — 厦门大学课题组投稿进度看板</p>
+  <footer class="site-footer">
+    <img id="footerArt" class="footer-art" alt="" />
+    <p class="footer-text" id="footerText">课题组投稿进度看板</p>
   </footer>
 
   <!-- 登录弹窗 -->
-  <div id="loginModal" class="modal hidden">
+  <div id="loginModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
     <div class="modal-backdrop" data-close-login></div>
     <div class="modal-card modal-sm">
       <div class="modal-banner">
-        <img src="./logo-xmu.svg" alt="厦门大学" class="banner-logo" />
-        <div class="banner-text"><strong>厦门大学</strong><span>XIAMEN UNIVERSITY</span></div>
+        <img class="banner-logo brand-logo-img" alt="" />
+        <div class="banner-text"><strong class="brand-name">课题组</strong><span class="brand-en">RESEARCH GROUP</span></div>
       </div>
       <div class="modal-head">
-        <h2>登录</h2>
+        <h2 id="loginTitle">登录</h2>
         <button class="modal-close" data-close-login>×</button>
       </div>
       <form id="loginForm" class="modal-body">
@@ -164,15 +139,15 @@
   </div>
 
   <!-- 注册 / 加入弹窗 -->
-  <div id="regModal" class="modal hidden">
+  <div id="regModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="regTitle">
     <div class="modal-backdrop" data-close-reg></div>
     <div class="modal-card modal-sm">
       <div class="modal-banner">
-        <img src="./logo-xmu.svg" alt="厦门大学" class="banner-logo" />
-        <div class="banner-text"><strong>厦门大学</strong><span>XIAMEN UNIVERSITY</span></div>
+        <img class="banner-logo brand-logo-img" alt="" />
+        <div class="banner-text"><strong class="brand-name">课题组</strong><span class="brand-en">RESEARCH GROUP</span></div>
       </div>
       <div class="modal-head">
-        <h2>注册 / 加入</h2>
+        <h2 id="regTitle">注册 / 加入</h2>
         <button class="modal-close" data-close-reg>×</button>
       </div>
       <div class="tabs">
@@ -205,7 +180,7 @@
   </div>
 
   <!-- 添加/编辑弹窗 -->
-  <div id="modal" class="modal hidden">
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <div class="modal-backdrop" data-close></div>
     <div class="modal-card">
       <div class="modal-head">
@@ -221,10 +196,15 @@
           <input id="f_journal" maxlength="120" placeholder="例如：Journal of Advanced Nursing" />
         </label>
         <div class="row">
-          <label>影响因子 (IF)
-            <input id="f_impact_factor" type="number" step="0.1" min="0" placeholder="例如：2.6" />
+          <label>第一作者
+            <input id="f_first_author" maxlength="60" placeholder="例如：张三" />
           </label>
-          <label>分区
+          <label>通讯作者
+            <input id="f_corresponding_author" maxlength="60" placeholder="例如：李教授（导师）" />
+          </label>
+        </div>
+        <div class="row">
+          <label>JCR分区
             <select id="f_quartile">
               <option value="待定">待定</option>
               <option value="Q1">Q1</option>
@@ -233,28 +213,24 @@
               <option value="Q4">Q4</option>
             </select>
           </label>
-        </div>
-        <div class="row">
           <label>投稿进度
             <select id="f_status">
-              <option>草稿</option><option>已投稿</option><option>审稿中</option>
-              <option>返修</option><option>接收</option><option>拒稿</option><option>已发表</option>
+              <option>草稿</option><option>已投稿</option><option>编辑处理中</option>
+              <option>审稿中</option><option>决定中</option><option>返修</option>
+              <option>接收</option><option>拒稿</option><option>已发表</option>
             </select>
           </label>
+        </div>
+        <div class="row">
           <label>负责人
             <input id="f_owner" disabled placeholder="自动填为当前账号" />
           </label>
         </div>
-        <div class="row">
-          <label>投稿时间
-            <input id="f_submitted_at" type="date" />
-          </label>
-          <label>返修截止日期
-            <input id="f_revision_deadline" type="date" />
-          </label>
-        </div>
+        <label>状态变更说明（可选，仅在该次改动记入"进度时间线"时显示）
+          <input id="f_status_note" maxlength="120" placeholder="例如：返修第二轮已提交 / 收到大修意见" />
+        </label>
         <label>备注
-          <textarea id="f_note" rows="2" maxlength="300" placeholder="审稿意见、返修截止、校样等"></textarea>
+          <textarea id="f_note" rows="2" maxlength="300" placeholder="审稿意见、返修说明、校样等（每次改状态会记入时间线）"></textarea>
         </label>
         <div class="modal-foot">
           <button type="button" class="btn btn-ghost" data-close>取消</button>
@@ -265,11 +241,11 @@
   </div>
 
   <!-- 修改密码弹窗 -->
-  <div id="pwModal" class="modal hidden">
+  <div id="pwModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="pwTitle">
     <div class="modal-backdrop" data-close-pw></div>
     <div class="modal-card modal-sm">
       <div class="modal-head">
-        <h2>修改密码</h2>
+        <h2 id="pwTitle">修改密码</h2>
         <button class="modal-close" data-close-pw>×</button>
       </div>
       <form id="pwForm" class="modal-body">
@@ -284,7 +260,7 @@
   </div>
 
   <!-- 课题组管理弹窗（课题组管理员） -->
-  <div id="teamModal" class="modal hidden">
+  <div id="teamModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="teamModalTitle">
     <div class="modal-backdrop" data-close-team></div>
     <div class="modal-card">
       <div class="modal-head">
@@ -301,7 +277,7 @@
             <option value="member">注册后角色：普通成员</option>
             <option value="admin">注册后角色：管理员</option>
           </select>
-          <input id="inviteMax" type="number" min="1" placeholder="次数(留空=不限)" />
+          <input id="inviteMax" type="number" min="1" placeholder="次数(留空=不限)" aria-label="邀请码可重复使用次数（留空表示不限）" />
           <button id="genInviteBtn" class="btn btn-primary">生成邀请码</button>
         </div>
         <div class="invite-list" id="inviteList"></div>
@@ -316,12 +292,12 @@
   </div>
 
   <!-- 使用说明引导向导 -->
-  <div id="onboardModal" class="modal hidden">
+  <div id="onboardModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="使用说明">
     <div class="modal-backdrop" data-close-onboard></div>
     <div class="modal-card onboard-card">
       <div class="onboard-banner">
-        <img src="./logo-xmu.svg" alt="厦门大学" class="banner-logo" />
-        <div class="banner-text"><strong>使用说明</strong><span>课题组论文投稿进度看板</span></div>
+          <img class="banner-logo brand-logo-img" alt="" />
+          <div class="banner-text"><strong>使用说明</strong><span>课题组论文投稿进度看板</span></div>
         <button class="modal-close" data-close-onboard>×</button>
       </div>
       <div class="onboard-body">
@@ -338,8 +314,12 @@
     </div>
   </div>
 
-  <div id="toast" class="toast hidden"></div>
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
+  <!-- 品牌配置：默认学术通用主题；改 public/brand.js 可切换为厦大等预设 -->
+  <script src="./brand.default.js"></script>
+  <script src="./brand.xmu.js"></script>
+  <script src="./brand.js"></script>
   <script src="./app.js"></script>
 </body>
 </html>

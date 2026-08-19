@@ -1,5 +1,5 @@
 :root {
-  /* 厦门大学 · 嘉庚红 学术配色 */
+  /* 默认「学术通用」配色；运行时由 public/brand.js 的品牌注入覆盖（如厦大嘉庚红） */
   --bg: #f5f2ef;            /* 暖白纸感 */
   --surface: #ffffff;
   --ink: #211b1d;           /* 暖近黑 */
@@ -7,9 +7,10 @@
   --line: #e9e3df;
   --line-strong: #d8d0cb;
 
-  --primary: #9d2235;       /* 嘉庚红 */
-  --primary-d: #7c1a29;
-  --primary-subtle: #fbeef0;
+  --primary: #2b4a6f;       /* 墨蓝（主色，运行时由品牌注入覆盖） */
+  --primary-d: #1e3552;
+  --primary-subtle: #eaf0f6;
+  --primary-l: #4a7099;       /* 渐变亮端（运行时由品牌注入覆盖） */
 
   --good: #2f7d52;
   --good-subtle: #e4f3ea;
@@ -29,18 +30,36 @@
   --radius-sm: 8px;
   --radius: 12px;
   --radius-lg: 16px;
+
+  /* 装饰图：运行时由品牌注入；默认 none = 纯色/纯文字（视觉减法） */
+  --header-art: none;
+  --modal-banner: none;
+  --stat-bg: none;
+  --bg-pattern: none;
 }
 
 * { box-sizing: border-box; }
 
 html { -webkit-font-smoothing: antialiased; }
 
+/* 全局键盘焦点环（WCAG 2.4.7 / 1.4.11）：键盘 Tab 时清晰可见 */
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+/* 深色背景上的元素改用浅色环，保证与相邻色 ≥3:1 对比 */
+.topbar :focus-visible,
+.modal-banner :focus-visible,
+.onboard-banner :focus-visible,
+.user-menu .btn:focus-visible { outline-color: #fff; }
+/* 输入框已有 box-shadow 焦点环，避免与 outline 叠加 */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible { outline: none; }
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
     "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
   background-color: var(--bg);
-  background-image: url("./xmu-bg.svg");
+  background-image: var(--bg-pattern, none);
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
@@ -53,7 +72,7 @@ body {
 /* ---------- 顶栏 ---------- */
 .topbar {
   background-color: #9d2235;
-  background-image: url("./xmu-header-art.svg"), linear-gradient(135deg, #6e1726 0%, #9d2235 55%, #b0334a 100%);
+  background-image: var(--header-art, none), linear-gradient(135deg, var(--primary-d) 0%, var(--primary) 55%, var(--primary-l) 100%);
   background-repeat: no-repeat, no-repeat;
   background-position: right center, center;
   background-size: auto 100%, cover;
@@ -176,13 +195,13 @@ body {
 /* ---------- 统计 ---------- */
 .stats {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
   margin-bottom: 22px;
 }
 .stat-card {
   background-color: var(--surface);
-  background-image: url("./xmu-stat-bg.svg");
+  background-image: var(--stat-bg, none);
   background-repeat: no-repeat;
   background-position: right bottom;
   background-size: 96px 96px;
@@ -201,8 +220,9 @@ body {
 .stat-card.stat-good::before { background: var(--good); }
 .stat-card.stat-warn::before { background: var(--warn); }
 .stat-card.stat-rev::before { background: var(--rev); }
-.stat-num { font-size: 1.95rem; font-weight: 700; letter-spacing: -0.02em; font-family: var(--serif); }
-.stat-label { font-size: 12px; color: var(--muted); margin-top: 2px; font-weight: 500; }
+.stat-card.stat-proc::before { background: var(--primary); }
+.stat-num { font-size: 2.05rem; font-weight: 700; letter-spacing: -0.02em; font-family: var(--serif); }
+.stat-label { font-size: 12.5px; color: var(--muted); margin-top: 2px; font-weight: 600; }
 
 /* ---------- 工具栏 ---------- */
 .toolbar {
@@ -307,11 +327,11 @@ body {
 .paper-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: 14px;
   table-layout: fixed;
 }
 .paper-table th, .paper-table td {
-  padding: 10px 12px;
+  padding: 12px 14px;
   text-align: left;
   border-bottom: 1px solid var(--line);
   vertical-align: middle;
@@ -322,7 +342,7 @@ body {
   background: #faf6f4;
   font-weight: 600;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
   position: sticky;
   top: 0;
   white-space: nowrap;
@@ -400,46 +420,52 @@ body {
 .owner-table { border-collapse: collapse; }
 .owner-table tbody tr:last-child td { border-bottom: none; }
 
-/* 列宽：9 列（已去掉“负责人”——负责人就是小框标题） */
-.owner-table th:nth-child(1), .owner-table td:nth-child(1) { width: 24%; min-width: 214px; }
-.owner-table th:nth-child(2), .owner-table td:nth-child(2) { width: 19%; min-width: 186px; }
-.owner-table th:nth-child(3), .owner-table td:nth-child(3) { width: 6%;  min-width: 56px; }
-.owner-table th:nth-child(4), .owner-table td:nth-child(4) { width: 6%;  min-width: 50px; }
-.owner-table th:nth-child(5), .owner-table td:nth-child(5) { width: 9%;  min-width: 70px; }
-.owner-table th:nth-child(6), .owner-table td:nth-child(6) { width: 10%; min-width: 82px; }
-.owner-table th:nth-child(7), .owner-table td:nth-child(7) { width: 11%; min-width: 94px; }
-.owner-table th:nth-child(8), .owner-table td:nth-child(8) { width: 8%;  min-width: 74px; }
-.owner-table th:nth-child(9), .owner-table td:nth-child(9) { width: 7%;  min-width: 70px; }
+/* 列宽：8 列（论文题目/期刊名称/第一作者/通讯作者/JCR分区/投稿进度/最近更新/操作） */
+.owner-table th:nth-child(1), .owner-table td:nth-child(1) { width: 25%; min-width: 220px; }
+.owner-table th:nth-child(2), .owner-table td:nth-child(2) { width: 18%; min-width: 180px; }
+.owner-table th:nth-child(3), .owner-table td:nth-child(3) { width: 9%;  min-width: 88px; }
+.owner-table th:nth-child(4), .owner-table td:nth-child(4) { width: 9%;  min-width: 88px; }
+.owner-table th:nth-child(5), .owner-table td:nth-child(5) { width: 6%;  min-width: 60px; }
+.owner-table th:nth-child(6), .owner-table td:nth-child(6) { width: 12%; min-width: 110px; }
+.owner-table th:nth-child(7), .owner-table td:nth-child(7) { width: 11%; min-width: 92px; }
+.owner-table th:nth-child(8), .owner-table td:nth-child(8) { width: 10%; min-width: 104px; }
 
 .title-cell {
   font-weight: 600;
+  font-size: 14.5px;
   color: var(--ink);
   white-space: nowrap;
 }
-.journal-cell { color: var(--muted); white-space: nowrap; }
+.journal-cell { color: var(--muted); font-size: 13.5px; white-space: nowrap; }
 .paper-table .num { text-align: right; }
 .paper-table td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 
 /* 进度标签 */
 .badge {
   display: inline-flex;
-  align-items: center;
-  padding: 3px 9px;
+  align-items: baseline;
+  gap: 5px;
+  padding: 4px 10px;
   border-radius: 999px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   background: var(--primary-subtle);
   color: var(--primary-d);
   white-space: nowrap;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 .badge.s-草稿   { background: #efe9e5; color: #6f6770; }
-.badge.s-已投稿 { background: #efe7e1; color: #7a6450; }
+.badge.s-已投稿 { background: #eef0f4; color: #3f4a5a; }
+.badge.s-编辑处理中 { background: #e7eefc; color: #1e40af; }
 .badge.s-审稿中 { background: var(--warn-subtle); color: #92400e; }
+.badge.s-决定中 { background: #f3e8fd; color: #6b21a8; }
 .badge.s-返修   { background: var(--rev-subtle); color: #9d174d; }
 .badge.s-接收   { background: var(--good-subtle); color: #166534; }
 .badge.s-拒稿   { background: #f0e1e4; color: #7a1d2b; }
 .badge.s-已发表 { background: #bbf7d0; color: #166534; }
+/* 英文状态默认隐藏（视觉减法：表格更安静）；悬停查看 */
+.badge-en { display: none; letter-spacing: .01em; }
+.badge:hover .badge-en { display: inline; }
 
 .q-badge {
   display: inline-flex;
@@ -483,11 +509,11 @@ body {
 .modal-head h2 { margin: 0; font-size: 17px; font-weight: 600; font-family: var(--serif); }
 .modal-close { border: none; background: none; font-size: 24px; cursor: pointer; color: var(--muted); line-height: 1; }
 .modal-close:hover { color: var(--ink); }
-.modal-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; }
-.modal-body label { display: flex; flex-direction: column; font-size: 13px; color: var(--muted); gap: 4px; }
+.modal-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; }
+.modal-body label { display: flex; flex-direction: column; font-size: 13.5px; color: var(--muted); gap: 5px; }
 .modal-body input, .modal-body select, .modal-body textarea {
-  padding: 9px 11px; border: 1px solid var(--line); border-radius: var(--radius-sm);
-  font-size: 14px; color: var(--ink); font-family: inherit;
+  padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm);
+  font-size: 14.5px; color: var(--ink); font-family: inherit;
   background: var(--surface);
 }
 .modal-body input:focus, .modal-body select:focus, .modal-body textarea:focus {
@@ -531,6 +557,44 @@ body {
 .dl.urgent { background: var(--warn-subtle); color: #92400e; font-weight: 600; }
 .dl.overdue { background: var(--bad-subtle); color: #991b1b; font-weight: 600; }
 
+/* 进度时间线（可展开/收起） */
+.log-row td {
+  padding: 0 14px 12px !important;
+  background: #fcfaf9;
+  border-bottom: 1px solid var(--line) !important;
+  width: auto !important;
+}
+.status-log {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12.5px; font-weight: 600; color: var(--primary-d);
+  background: var(--primary-subtle); border: 1px solid #f0d9de;
+  padding: 4px 12px; border-radius: 999px; cursor: pointer; user-select: none;
+}
+.status-log:hover { background: #f7e2e6; }
+.status-log.open { background: var(--primary); color: #fff; border-color: var(--primary); }
+.status-log-body {
+  list-style: none; margin: 10px 0 0; padding: 12px 14px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+  display: flex; flex-direction: column; gap: 8px;
+}
+.status-log-body li {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px;
+  font-size: 13px; color: var(--ink);
+  padding-left: 16px; position: relative;
+}
+.status-log-body li::before {
+  content: ""; position: absolute; left: 0; top: 6px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--primary); opacity: .55;
+}
+.status-log-body .sl-at { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.status-log-body .sl-flow { font-weight: 600; color: var(--primary-d); }
+.status-log-body .sl-actor { color: var(--muted); font-size: 12px; }
+.status-log-body .sl-note {
+  flex-basis: 100%; font-size: 12.5px; color: var(--ink);
+  background: var(--bg); border-radius: 6px; padding: 4px 8px; margin-top: 2px;
+}
+
 /* 课题组管理：邀请码生成 + 列表 */
 .invite-gen { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
 .invite-gen select, .invite-gen input { padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius-sm); font-size: 13px; font-family: inherit; }
@@ -550,7 +614,7 @@ body {
 
 .hidden { display: none !important; }
 
-/* ---------- 厦大视觉元素 ---------- */
+/* ---------- 品牌视觉元素（由 public/brand.js 控制，开源可换机构） ---------- */
 /* 主按钮凤凰花图标 */
 .btn-icon { width: 16px; height: 16px; vertical-align: -3px; margin-right: 5px; filter: brightness(0) invert(1); }
 
@@ -559,8 +623,8 @@ body {
 .empty-title { font-family: var(--serif); font-size: 1.05rem; font-weight: 600; color: var(--ink); margin: 0; }
 .empty-sub { font-size: .78rem; color: var(--muted); margin: 0; }
 
-/* 页脚：嘉庚建筑剪影 + 题字 */
-.xmu-footer { margin-top: 26px; text-align: center; }
+/* 页脚：品牌建筑剪影（若品牌配置了 footerArt）+ 题字 */
+.site-footer { margin-top: 26px; text-align: center; }
 .footer-art {
   width: min(900px, 100%); height: auto; display: block; margin: 0 auto;
   opacity: .92; border-radius: var(--radius) var(--radius) 0 0;
@@ -570,11 +634,11 @@ body {
   letter-spacing: .06em; font-family: var(--serif);
 }
 
-/* 登录 / 注册弹窗顶部校徽 banner（与顶栏同款嘉庚建筑横幅） */
+/* 登录 / 注册弹窗顶部品牌 banner（与顶栏同款横幅，若品牌配置了 modalBanner） */
 .modal-banner {
   display: flex; align-items: center; gap: 12px;
   padding: 16px 20px; color: #fff;
-  background-image: url("./xmu-modal-banner.svg"), linear-gradient(135deg, #6e1726 0%, #9d2235 55%, #b0334a 100%);
+  background-image: var(--modal-banner, none), linear-gradient(135deg, var(--primary-d) 0%, var(--primary) 55%, var(--primary-l) 100%);
   background-repeat: no-repeat, no-repeat;
   background-position: right center, center;
   background-size: cover, cover;
@@ -621,12 +685,13 @@ body {
   .topbar-right { width: 100%; justify-content: flex-end; }
   .team-select { width: 100%; }
   /* 窄屏顶栏换行，撤掉建筑横幅保持清爽 */
-  .topbar { background-image: linear-gradient(135deg, #6e1726 0%, #9d2235 55%, #b0334a 100%); }
+  .topbar { background-image: var(--header-art, none), linear-gradient(135deg, var(--primary-d) 0%, var(--primary) 55%, var(--primary-l) 100%); }
 }
 
 /* 中等屏幕：容器适度收紧，避免表格列被压 */
 @media (min-width: 761px) and (max-width: 1200px) {
   .container { max-width: 100%; width: 100%; padding: 20px; }
+  .stats { grid-template-columns: repeat(3, 1fr); }
   .paper-table th, .paper-table td { padding: 9px 10px; }
 }
 
@@ -639,7 +704,7 @@ body {
 .onboard-banner {
   display: flex; align-items: center; gap: 12px;
   padding: 16px 20px; color: #fff; position: relative;
-  background-image: url("./xmu-modal-banner.svg"), linear-gradient(135deg, #6e1726 0%, #9d2235 55%, #b0334a 100%);
+  background-image: var(--modal-banner, none), linear-gradient(135deg, var(--primary-d) 0%, var(--primary) 55%, var(--primary-l) 100%);
   background-repeat: no-repeat, no-repeat;
   background-position: right center, center;
   background-size: cover, cover;

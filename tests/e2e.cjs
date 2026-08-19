@@ -186,8 +186,8 @@ async function apiLogout() {
 async function uiTest() {
   const { JSDOM } = require("jsdom");
   let html = fs.readFileSync(path.join(__dirname, "..", "public", "index.html"), "utf8");
-  // 去掉原 <script src="./app.js"></script>，测试里手动 eval，避免 jsdom 外部脚本加载不稳定
-  html = html.replace(/<script[^>]*src=["']\.\/app\.js["'][^>]*><\/script>/, "");
+  // 去掉全部本地 <script src>，测试里手动按顺序 eval，避免 jsdom 外部脚本加载不稳定
+  html = html.replace(/<script[^>]*src=["']\.\/[^"']+["'][^>]*><\/script>/g, "");
 
   const storage = {};
   const dom = new JSDOM(html, {
@@ -217,9 +217,10 @@ async function uiTest() {
   const win = dom.window;
   const doc = win.document;
 
-  // 手动加载并执行 app.js
-  const appCode = fs.readFileSync(path.join(__dirname, "..", "public", "app.js"), "utf8");
-  win.eval(appCode);
+  // 手动按浏览器加载顺序执行脚本：品牌配置（默认 → 厦大预设 → 入口）→ app.js
+  for (const f of ["brand.default.js", "brand.xmu.js", "brand.js", "app.js"]) {
+    win.eval(fs.readFileSync(path.join(__dirname, "..", "public", f), "utf8"));
+  }
 
   // 等待 boot 里的异步请求结束
   await new Promise((r) => setTimeout(r, 600));
@@ -279,7 +280,7 @@ async function uiTest() {
   if ($("modal").classList.contains("hidden")) throw new Error("添加论文弹窗未打开");
   fill("f_title", "UI测试论文");
   fill("f_journal", "UI Journal");
-  fill("f_impact_factor", "4.5");
+  fill("f_quartile", "Q1");
   fill("f_status", "审稿中");
   submit("paperForm");
 

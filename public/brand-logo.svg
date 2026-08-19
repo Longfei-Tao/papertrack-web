@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="课题组看板">
+  <defs>
+    <radialGradient id="brandBg" cx="50%" cy="38%" r="70%">
+      <stop offset="0%" stop-color="#4a7099"/>
+      <stop offset="100%" stop-color="#1e3552"/>
+    </radialGradient>
+  </defs>
+  <circle cx="32" cy="32" r="31" fill="url(#brandBg)"/>
+  <circle cx="32" cy="32" r="31" fill="none" stroke="#ffffff" stroke-opacity=".28" stroke-width="1.5"/>
+  <!-- 展开的书本（通用学术符号） -->
+  <g fill="#ffffff">
+    <path d="M32 22 C26 18 18 18 14 20 L14 44 C18 42 26 42 32 46 Z"/>
+    <path d="M32 22 C38 18 46 18 50 20 L50 44 C46 42 38 42 32 46 Z"/>
+  </g>
+  <path d="M32 22 L32 46" stroke="#1e3552" stroke-width="1.4" opacity=".45"/>
+  <!-- 书脊上方的小星（目标 / 发表） -->
+  <path d="M32 13 l1.7 3.5 3.8.5 -2.8 2.7.7 3.8 -3.4-1.8 -3.4 1.8.7-3.8 -2.8-2.7 3.8-.5 Z" fill="#ffffff"/>
+</svg>
