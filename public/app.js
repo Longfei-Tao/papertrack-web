@@ -728,23 +728,12 @@ function openPw() { $("pwForm").reset(); openDialog($("pwModal"), closePw); }
 function closePw() { closeDialog($("pwModal")); }
 
 function toggleDropdown() {
-  closeTeamDropdown(); // 互斥：开用户菜单前先关掉课题组菜单
-  const box = $("userDropdown");
-  box.classList.toggle("hidden");
-  $("userBtn").setAttribute("aria-expanded", String(!box.classList.contains("hidden")));
+  toggleFloating($("userBtn"), $("userDropdown")); // 头像下拉：右对齐 + fixed 浮在 topbar 下方
 }
 function closeDropdown() {
-  $("userDropdown").classList.add("hidden");
+  const dd = $("userDropdown");
+  dd.classList.add("hidden");
   $("userBtn").setAttribute("aria-expanded", "false");
-}
-
-function closeTeamDropdown() {
-  const dd = $("teamDropdown");
-  if (!dd) return;
-  if (!dd.classList.contains("hidden")) {
-    dd.classList.add("hidden");
-    $("teamBtn").setAttribute("aria-expanded", "false");
-  }
 }
 
 // ---------- 课题组管理 ----------
@@ -988,39 +977,34 @@ async function loadSample() {
 }
 
 // ---------- 事件绑定 ----------
-// 计算并设置 teamDropdown 的屏幕坐标（fixed 定位 + inline 坐标，绕过任何 stacking context）
-function positionTeamDropdown() {
-  const btn = $("teamBtn");
-  const dd = $("teamDropdown");
-  // 此时 dd 已 visible（由 toggle 保证），可放心量 offsetWidth
+// 通用 fixed 浮层：在按钮旁定位，避开视口边缘、空间不足向上展开
+//   - btn:   触发器（getBoundingClientRect）
+//   - panel: 要显示的浮层（fixed 定位；坐标会写到行内 style）
+//   - margin: 浮层与按钮的间距（默认 8）
+//   - align:  "left" 默认；"right" 与按钮右对齐（头像下拉常用）
+function positionFloating(btn, panel, { margin = 8, align = "left" } = {}) {
   const r = btn.getBoundingClientRect();
-  const dW = dd.offsetWidth || 240;
-  const dH = dd.offsetHeight || 160;
-  const margin = 8;
-  // 默认向下展开；若下方空间不足则向上展开
-  const flipUp = r.bottom + margin + dH > window.innerHeight && r.top - margin - dH > 0;
-  let x = r.left;
-  if (x + dW > window.innerWidth - 8) x = Math.max(8, r.right - dW);
-  const y = flipUp ? (r.top - dH - margin) : (r.bottom + margin);
-  // inline 直接接管（不依赖 CSS 变量传递，避免任何 stacking context 限制）
-  dd.style.position = "fixed";
-  dd.style.left = x + "px";
-  dd.style.top = y + "px";
-  dd.style.zIndex = "9999";
+  const pW = panel.offsetWidth || 240;
+  const pH = panel.offsetHeight || 160;
+  const flipUp = r.bottom + margin + pH > window.innerHeight && r.top - margin - pH > 0;
+  let x = align === "right" ? r.right - pW : r.left;
+  if (x + pW > window.innerWidth - 8) x = Math.max(8, window.innerWidth - pW - 8);
+  if (x < 8) x = 8;
+  const y = flipUp ? (r.top - pH - margin) : (r.bottom + margin);
+  panel.style.position = "fixed";
+  panel.style.left = x + "px";
+  panel.style.top = y + "px";
+  panel.style.zIndex = "60";
 }
 
-// 课题组切换（自定义下拉）
-function toggleTeamDropdown() {
-  const dd = $("teamDropdown");
-  const opening = dd.classList.contains("hidden");
-  if (opening) closeDropdown(); // 互斥：先关掉用户菜单
-  dd.classList.toggle("hidden");
-  const visible = !dd.classList.contains("hidden");
-  $("teamBtn").setAttribute("aria-expanded", String(visible));
-  if (visible) {
-    // 等一帧让 dd 有尺寸再定位
-    requestAnimationFrame(positionTeamDropdown);
-  }
+// 切换 fixed 浮层；panel 必须在 body 直系下（脱离 topbar 的 overflow:hidden 裁切）
+function toggleFloating(btn, panel, otherClose) {
+  const opening = panel.classList.contains("hidden");
+  if (opening && otherClose) otherClose(); // 互斥：开 A 之前关 B
+  panel.classList.toggle("hidden");
+  const visible = !panel.classList.contains("hidden");
+  btn.setAttribute("aria-expanded", String(visible));
+  if (visible) requestAnimationFrame(() => positionFloating(btn, panel, { align: "right" }));
 }
 
 // 课题组切换（modal 中央弹窗，绝对不会被遮）
@@ -1042,8 +1026,7 @@ function bind() {
   $("toRegister").addEventListener("click", (e) => { e.preventDefault(); closeLogin(); openReg(); });
   $("userBtn").addEventListener("click", (e) => { e.stopPropagation(); toggleDropdown(); });
   document.addEventListener("click", (e) => {
-    if (!e.target.closest(".user-menu")) closeDropdown();
-    if (!e.target.closest(".team-menu")) closeTeamDropdown();
+    if (!e.target.closest(".user-menu") && !e.target.closest("#userDropdown")) closeDropdown();
   });
   $("userDropdown").addEventListener("click", (e) => {
     const act = e.target.getAttribute("data-act");

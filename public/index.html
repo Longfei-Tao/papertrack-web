@@ -20,10 +20,10 @@
       </div>
       <div class="topbar-right">
         <button id="helpBtn" class="btn btn-ghost topbar-help">使用说明</button>
-        <!-- 课题组切换（登录后显示）：自定义按钮 + 下拉面板，避免原生 select 视觉不一致 / 被遮挡 -->
+        <!-- 课题组切换（登录后显示）：点开后弹出中央 modal（openTeamSwitch）。team-switch-modal 在 body 末 -->
         <div class="team-menu hidden" id="teamMenu">
           <button id="teamBtn" class="btn btn-ghost team-trigger" type="button"
-                  aria-haspopup="listbox" aria-expanded="false" aria-controls="teamDropdown"
+                  aria-haspopup="dialog" aria-expanded="false" aria-controls="teamSwitchModal"
                   title="切换课题组">
             <svg class="team-icon" viewBox="0 0 16 16" aria-hidden="true">
               <circle cx="6" cy="6" r="2.4" fill="currentColor"/>
@@ -44,12 +44,6 @@
           <button id="loginBtn" class="btn btn-ghost">登录</button>
           <div id="userMenu" class="user-menu hidden">
             <button id="userBtn" class="btn btn-ghost" aria-haspopup="true" aria-expanded="false" aria-controls="userDropdown"></button>
-            <div id="userDropdown" class="dropdown hidden">
-              <button class="dropdown-item" data-act="mine">只看我的</button>
-              <button class="dropdown-item" data-act="team">课题组管理</button>
-              <button class="dropdown-item" data-act="password">修改密码</button>
-              <button class="dropdown-item" data-act="logout">退出登录</button>
-            </div>
           </div>
         </div>
       </div>
@@ -349,8 +343,13 @@
 
   <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
-  <!-- 课题组下拉面板：直接挂在 body 下，脱离 topbar 的 sticky stacking context，压在一切之上 -->
-  <ul id="teamDropdown" class="team-dropdown hidden" role="listbox" aria-labelledby="teamBtn"></ul>
+  <!-- 用户头像下拉：同样挂在 body 下，绕开 .topbar 的 overflow:hidden 裁切（与旧团队 dropdown 同套处理） -->
+  <div id="userDropdown" class="dropdown user-dropdown hidden" role="menu" aria-labelledby="userBtn">
+    <button class="dropdown-item" data-act="mine">只看我的</button>
+    <button class="dropdown-item" data-act="team">课题组管理</button>
+    <button class="dropdown-item" data-act="password">修改密码</button>
+    <button class="dropdown-item" data-act="logout">退出登录</button>
+  </div>
 
   <!-- 品牌配置：默认学术通用主题；改 public/brand.js 可切换为厦大等预设 -->
   <script src="./brand.default.js"></script>

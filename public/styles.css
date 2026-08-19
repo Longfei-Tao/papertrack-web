@@ -240,50 +240,32 @@ body {
   padding: 18px; color: var(--muted); text-align: center; font-size: 13px;
 }
 
-.team-dropdown {
-  /* legacy 浮层代码现在不用，但保留以防回退 */
-  position: fixed;
-  left: 0;
-  top: 0;
-  min-width: 220px; max-width: 280px;
-  width: max-content;
-  padding: 6px;
-  list-style: none; margin: 0;
-  z-index: 9999;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  box-shadow: 0 12px 32px -8px rgb(15 23 42 / 0.18), 0 4px 10px -4px rgb(15 23 42 / 0.10);
-  animation: filterIn var(--motion);
-}
-.team-option {
-  display: flex; align-items: center; gap: 8px;
-  width: 100%; text-align: left;
-  padding: 8px 12px; border: none; background: none;
-  border-radius: var(--radius-sm);
-  cursor: pointer; font-size: 13px; color: var(--ink);
-  transition: background-color var(--motion-fast);
-}
-.team-option:hover, .team-option:focus-visible { background: var(--primary-subtle); outline: none; }
-.team-option.is-active { background: var(--primary-subtle); color: var(--primary-d); font-weight: 600; }
-.team-option .role-tag {
-  margin-left: auto; font-size: 11px; padding: 1px 8px; border-radius: 999px;
-  background: var(--primary); color: #fff; font-weight: 600;
-}
-.team-empty {
-  padding: 10px 12px; font-size: 12px; color: var(--muted);
-}
+/* 旧 .team-dropdown / .team-option / .team-empty 已删除：团队切换现走中央 modal（#teamSwitchModal），
+   旧 dropdown 路径被顶栏 overflow:hidden 裁切，已被通用 .user-dropdown 取代 */
 
 /* 登录区 / 用户菜单 */
 .auth-area { position: relative; display: flex; align-items: center; gap: 8px; }
 .user-menu { position: relative; }
 .user-menu .btn { color: #fff; border-color: rgba(255,255,255,.45); background: rgba(255,255,255,.1); }
 .user-menu .btn:hover { background: rgba(255,255,255,.22); }
-.dropdown {
-  position: absolute; right: 0; top: calc(100% + 8px); min-width: 170px;
+/* 用户下拉：搬出 topbar 后改 fixed 定位；left/top 由 JS 写在行内；
+   平时 hidden 类只在 CSS 中担任「不占布局 + 不响应」的角色 */
+.user-dropdown {
+  position: fixed;        /* 脱离 topbar 的 overflow:hidden 裁切 */
+  left: 0; top: 0;        /* 占位；运行中由 JS 算出真实坐标 */
+  min-width: 180px;
   background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
   box-shadow: 0 8px 24px -4px rgb(15 23 42 / 0.14), 0 2px 6px -2px rgb(15 23 42 / 0.08);
-  padding: 6px; z-index: 40;
+  padding: 6px;
+  z-index: 60;            /* 高于顶栏的 30，也高于 .filter-dropdown 的 40 */
+  transform-origin: top right;
+  animation: filterIn var(--motion);
+}
+.dropdown {
+  /* 兼容样式保留：背景/边框/阴影/动画；定位由 .user-dropdown 提供 */
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+  box-shadow: 0 8px 24px -4px rgb(15 23 42 / 0.14), 0 2px 6px -2px rgb(15 23 42 / 0.08);
+  padding: 6px; z-index: 60;
   transform-origin: top right;
   animation: filterIn var(--motion);
 }
