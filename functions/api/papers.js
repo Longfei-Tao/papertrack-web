@@ -6,7 +6,7 @@
 //   PUT   更新；只能改自己归属的论文（课题组 admin 可改全部）
 //   DELETE删除；同上
 
-import { getUser, memberRole, json } from "../_lib/auth.js";
+import { getUser, canAccessTeam, json } from "../_lib/auth.js";
 
 // SCI 英文期刊投稿进度的中文名 + 英文对照（更贴合课题组投英文刊的习惯）
 export const STATUSES = [
@@ -27,10 +27,10 @@ export const STATUS_EN = {
 export const QUARTILES = ["Q1", "Q2", "Q3", "Q4", "待定"];
 
 const SAMPLE = [
-  { title: "基于循证的老年糖尿病患者营养干预效果研究", journal: "Journal of Advanced Nursing", first_author: "张明", corresponding_author: "李教授", impact_factor: 2.6, quartile: "Q1", status: "审稿中", submitted_at: "2026-05-12", note: "外审第二轮，预计 8 月底返回意见" },
-  { title: "围手术期心理支持对术后恢复影响的随机对照试验", journal: "International Journal of Nursing Studies", first_author: "李华", corresponding_author: "王教授", impact_factor: 5.1, quartile: "Q1", status: "返修", submitted_at: "2026-03-08", note: "大修，返修截止 2026-09-01", revision_deadline: "2026-09-01" },
-  { title: "社区居家养老服务满意度及其影响因素分析", journal: "BMC Nursing", first_author: "王芳", corresponding_author: "李教授", impact_factor: 2.0, quartile: "Q2", status: "接收", submitted_at: "2026-02-20", note: "已接收，校样中" },
-  { title: "护理本科生职业认同的纵向研究", journal: "Nurse Education Today", first_author: "陈静", corresponding_author: "王教授", impact_factor: 3.0, quartile: "Q2", status: "已发表", submitted_at: "2025-11-15", note: "已 online 发表" },
+  { title: "基于循证的老年糖尿病患者营养干预效果研究", journal: "Journal of Advanced Nursing", first_author: "张明", corresponding_author: "李教授", reviewers: "王教授、陈博士", impact_factor: 2.6, quartile: "Q1", status: "审稿中", submitted_at: "2026-05-12", note: "外审第二轮，预计 8 月底返回意见" },
+  { title: "围手术期心理支持对术后恢复影响的随机对照试验", journal: "International Journal of Nursing Studies", first_author: "李华", corresponding_author: "王教授", reviewers: "刘教授", impact_factor: 5.1, quartile: "Q1", status: "返修", submitted_at: "2026-03-08", note: "大修，返修截止 2026-09-01", revision_deadline: "2026-09-01" },
+  { title: "社区居家养老服务满意度及其影响因素分析", journal: "BMC Nursing", first_author: "王芳", corresponding_author: "李教授", reviewers: "赵教授、孙博士", impact_factor: 2.0, quartile: "Q2", status: "接收", submitted_at: "2026-02-20", note: "已接收，校样中" },
+  { title: "护理本科生职业认同的纵向研究", journal: "Nurse Education Today", first_author: "陈静", corresponding_author: "王教授", reviewers: "", impact_factor: 3.0, quartile: "Q2", status: "已发表", submitted_at: "2025-11-15", note: "已 online 发表" },
 ];
 
 function nowISO() { return new Date().toISOString(); }
@@ -72,8 +72,8 @@ export async function onRequest(context) {
   const teamId = url.searchParams.get("team_id") || (await request.json().catch(() => ({}))).team_id;
   if (!teamId) return json({ error: "缺少 team_id" }, 400);
 
-  // 必须是该团队成员
-  const role = await memberRole(db, user.id, teamId);
+  // 必须是该团队成员（私密组锁定后仅创建者可访问）
+  const role = await canAccessTeam(db, user.id, teamId);
   if (!role) return json({ error: "你不是该课题组成员，无权访问" }, 403);
 
   try {
@@ -116,10 +116,10 @@ export async function onRequest(context) {
           const sid = newId();
           await db.prepare(
             `INSERT OR REPLACE INTO papers
-             (id,team_id,title,journal,first_author,corresponding_author,impact_factor,quartile,status,owner_id,owner_name,submitted_at,revision_deadline,note,created_at,updated_at)
+             (id,team_id,title,journal,first_author,corresponding_author,reviewers,impact_factor,quartile,status,owner_id,owner_name,submitted_at,revision_deadline,note,created_at,updated_at)
              VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
           ).bind(
-            sid, teamId, s.title, s.journal || "", strOrNull(s.first_author), strOrNull(s.corresponding_author), numOrNull(s.impact_factor), s.quartile || "待定",
+            sid, teamId, s.title, s.journal || "", strOrNull(s.first_author), strOrNull(s.corresponding_author), strOrNull(s.reviewers), numOrNull(s.impact_factor), s.quartile || "待定",
             s.status || "草稿", user.id, user.display_name, s.submitted_at || "",
             strOrNull(s.revision_deadline), s.note || "", nowISO(), nowISO()
           ).run();
@@ -148,10 +148,10 @@ export async function onRequest(context) {
       if (!QUARTILES.includes(quartile)) return json({ error: "JCR分区不合法" }, 400);
       await db.prepare(
         `INSERT INTO papers
-         (id,team_id,title,journal,first_author,corresponding_author,impact_factor,quartile,status,owner_id,owner_name,submitted_at,revision_deadline,note,created_at,updated_at)
+         (id,team_id,title,journal,first_author,corresponding_author,reviewers,impact_factor,quartile,status,owner_id,owner_name,submitted_at,revision_deadline,note,created_at,updated_at)
          VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
       ).bind(
-        id, teamId, String(body.title).trim(), strOrNull(body.journal), strOrNull(body.first_author), strOrNull(body.corresponding_author),
+        id, teamId, String(body.title).trim(), strOrNull(body.journal), strOrNull(body.first_author), strOrNull(body.corresponding_author), strOrNull(body.reviewers),
         numOrNull(body.impact_factor),
         quartile, status, ownerId, ownerName,
         strOrNull(body.submitted_at), strOrNull(body.revision_deadline), strOrNull(body.note), now, now
@@ -185,7 +185,7 @@ export async function onRequest(context) {
       const newQuartile = body.quartile != null ? body.quartile : existing.quartile;
       await db.prepare(
         `UPDATE papers SET
-           title=?, journal=?, first_author=?, corresponding_author=?, impact_factor=?, quartile=?, status=?,
+           title=?, journal=?, first_author=?, corresponding_author=?, reviewers=?, impact_factor=?, quartile=?, status=?,
            submitted_at=?, revision_deadline=?, note=?, updated_at=?
          WHERE id=?`
       ).bind(
@@ -194,6 +194,7 @@ export async function onRequest(context) {
         body.journal != null ? strOrNull(body.journal) : existing.journal,
         body.first_author != null ? strOrNull(body.first_author) : existing.first_author,
         body.corresponding_author != null ? strOrNull(body.corresponding_author) : existing.corresponding_author,
+        body.reviewers != null ? strOrNull(body.reviewers) : existing.reviewers,
         body.impact_factor !== undefined ? numOrNull(body.impact_factor) : existing.impact_factor,
         newQuartile, newStatus,
         body.submitted_at != null ? strOrNull(body.submitted_at) : existing.submitted_at,

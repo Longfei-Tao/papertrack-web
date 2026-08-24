@@ -105,6 +105,12 @@ function currentRole() {
   return t ? t.role : null;
 }
 
+// 当前团队是否由我创建（创建者可设置私密模式）
+function currentIsOwner() {
+  const t = state.teams.find((x) => x.id === state.currentTeam);
+  return !!(t && state.user && t.created_by === state.user.id);
+}
+
 // ---------- 登录态 ----------
 async function boot() {
   if (state.token) {
@@ -362,7 +368,7 @@ function applyFilters() {
 
   const out = state.papers.filter((p) => {
     if (q) {
-      const hay = [p.title, p.journal, p.first_author, p.corresponding_author, p.note, p.owner_name].filter(Boolean).join(" ").toLowerCase();
+      const hay = [p.title, p.journal, p.first_author, p.corresponding_author, p.reviewers, p.note, p.owner_name].filter(Boolean).join(" ").toLowerCase();
       if (!hay.includes(q)) return false;
     }
     if (f.status.size && !f.status.has(p.status || "")) return false;
@@ -580,12 +586,13 @@ function renderBoards() {
             <td class="journal-cell" data-label="期刊名称">${esc(p.journal || "—")}</td>
             <td data-label="第一作者">${esc(p.first_author || "—")}</td>
             <td data-label="通讯作者">${esc(p.corresponding_author || "—")}</td>
+            <td data-label="审稿专家">${esc(p.reviewers || "—")}</td>
             <td data-label="JCR分区">${qBadge(p.quartile)}</td>
             <td data-label="投稿进度">${badge(p.status)}</td>
             <td data-label="最近更新">${relTime(p.updated_at)}</td>
             <td class="op-col" data-label="操作">${op}</td>
           </tr>
-          <tr class="log-row"><td colspan="8">${logHtml}</td></tr>`;
+          <tr class="log-row"><td colspan="9">${logHtml}</td></tr>`;
         })
         .join("");
       // 小框头部"添加论文"：本人可见；管理员对任意成员的小框都可见
@@ -608,6 +615,7 @@ function renderBoards() {
               <th>期刊名称</th>
               <th>第一作者</th>
               <th>通讯作者</th>
+              <th>审稿专家</th>
               <th>JCR分区</th>
               <th>投稿进度</th>
               <th>最近更新</th>
@@ -707,6 +715,7 @@ function openModal(record, ownerId, ownerName) {
   $("f_journal").value = record ? record.journal || "" : "";
   $("f_first_author").value = record ? (record.first_author || "") : "";
   $("f_corresponding_author").value = record ? (record.corresponding_author || "") : "";
+  $("f_reviewers").value = record ? (record.reviewers || "") : "";
   $("f_quartile").value = record ? record.quartile || "待定" : "待定";
   $("f_status").value = record ? record.status || "草稿" : "草稿";
   $("f_status_note").value = "";
@@ -745,11 +754,29 @@ function openTeam() {
   $("inviteMax").value = "";
   const isAdmin = currentRole() === "admin";
   document.querySelector(".invite-gen").classList.toggle("hidden", !isAdmin);
+  // 私密模式开关：仅创建者可见，并回显当前锁定状态
+  const isOwner = currentIsOwner();
+  $("lockPanel").classList.toggle("hidden", !isOwner);
+  if (isOwner) $("lockToggle").checked = !!(t && t.locked);
   loadMembers();
   loadInvites();
   openDialog($("teamModal"), closeTeam);
 }
 function closeTeam() { closeDialog($("teamModal")); }
+
+// 切换私密模式（锁定/解锁课题组）
+async function toggleLock(e) {
+  const locked = e.target.checked;
+  const { ok, data } = await api("PATCH", "/teams/" + encodeURIComponent(state.currentTeam) + "/members", { locked });
+  if (!ok) {
+    toast(data.error || "设置失败");
+    e.target.checked = !locked; // 失败回滚
+    return;
+  }
+  const t = state.teams.find((x) => x.id === state.currentTeam);
+  if (t) t.locked = data.locked ? 1 : 0;
+  toast(locked ? "已设为私密组，仅你可见" : "已解除私密模式");
+}
 
 async function loadMembers() {
   const { ok, data } = await api("GET", "/teams/" + encodeURIComponent(state.currentTeam) + "/members");
@@ -936,6 +963,7 @@ async function submitPaper(e) {
     journal: $("f_journal").value.trim(),
     first_author: $("f_first_author").value.trim(),
     corresponding_author: $("f_corresponding_author").value.trim(),
+    reviewers: $("f_reviewers").value.trim(),
     quartile: $("f_quartile").value,
     status: $("f_status").value,
     status_note: $("f_status_note").value.trim(),
@@ -1050,6 +1078,7 @@ function bind() {
   document.querySelectorAll("[data-close-pw]").forEach((el) => el.addEventListener("click", closePw));
   // 课题组管理弹窗
   $("genInviteBtn").addEventListener("click", genInvite);
+  $("lockToggle").addEventListener("change", toggleLock);
   document.querySelectorAll("[data-close-team]").forEach((el) => el.addEventListener("click", closeTeam));
   $("membersList").addEventListener("click", (e) => {
     const uid = e.target.getAttribute("data-delmember");

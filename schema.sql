@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS teams (
   id         TEXT PRIMARY KEY,
   name       TEXT NOT NULL,                 -- 课题组名称，如"李教授课题组"
   created_by TEXT,                          -- 创建者用户 id
+  locked     INTEGER NOT NULL DEFAULT 0,    -- 1 = 私密组：仅创建者可访问
   created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_teams_name ON teams(name);
@@ -66,6 +67,7 @@ CREATE TABLE IF NOT EXISTS papers (
   journal           TEXT,                   -- 期刊名称
   first_author      TEXT,                   -- 第一作者（2026-08 新增）
   corresponding_author TEXT,                -- 通讯作者（2026-08 新增）
+  reviewers         TEXT,                   -- 邀请的审稿专家（多人用顿号/逗号分隔，2026-08 新增）
   impact_factor     REAL,                   -- 影响因子 IF（界面已隐藏，数据保留）
   quartile          TEXT,                   -- 分区：Q1 / Q2 / Q3 / Q4 / 待定
   status            TEXT,                   -- 投稿进度（SCI 流程：草稿/已投稿/编辑处理中/审稿中/决定中/返修/接收/拒稿/已发表）
@@ -102,6 +104,8 @@ CREATE INDEX IF NOT EXISTS idx_psl_team  ON paper_status_log(team_id);
 -- 仅在数据库已存在、尚未含新列/新表时执行以下命令（重复执行安全）：
 -- ALTER TABLE papers ADD COLUMN first_author TEXT;
 -- ALTER TABLE papers ADD COLUMN corresponding_author TEXT;
+-- ALTER TABLE papers ADD COLUMN reviewers TEXT;
+-- ALTER TABLE teams ADD COLUMN locked INTEGER NOT NULL DEFAULT 0;
 -- CREATE TABLE IF NOT EXISTS paper_status_log (
 --   id TEXT PRIMARY KEY, paper_id TEXT NOT NULL, team_id TEXT NOT NULL,
 --   from_status TEXT, to_status TEXT, note TEXT, actor_id TEXT, actor_name TEXT, created_at TEXT NOT NULL

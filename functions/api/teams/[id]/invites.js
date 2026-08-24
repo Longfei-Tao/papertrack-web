@@ -2,7 +2,7 @@
 //   GET  /api/teams/:id/invites  -> 列出本组邀请码（仅 admin；普通成员不可见，防其拿到管理员邀请码自行升级）
 //   POST /api/teams/:id/invites  -> 新建邀请码（仅 admin）
 //        body: { role?:'member'|'admin', maxUses?:number|null, expiresInDays?:number|null }
-import { getUser, memberRole, genSaltHex, json } from "../../../_lib/auth.js";
+import { getUser, canAccessTeam, genSaltHex, json } from "../../../_lib/auth.js";
 
 function newId() {
   return crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2);
@@ -22,7 +22,7 @@ async function genInviteCode(db) {
 export async function onRequestGet({ request, env, params }) {
   const u = await getUser(request, env);
   if (!u) return json({ error: "未登录" }, 401);
-  const role = await memberRole(env.DB, u.id, params.id);
+  const role = await canAccessTeam(env.DB, u.id, params.id);
   if (role !== "admin") return json({ error: "需要课题组管理员权限" }, 403);
 
   const { results } = await env.DB.prepare(
@@ -35,7 +35,7 @@ export async function onRequestGet({ request, env, params }) {
 export async function onRequestPost({ request, env, params }) {
   const u = await getUser(request, env);
   if (!u) return json({ error: "未登录" }, 401);
-  const role = await memberRole(env.DB, u.id, params.id);
+  const role = await canAccessTeam(env.DB, u.id, params.id);
   if (role !== "admin") return json({ error: "需要课题组管理员权限" }, 403);
 
   const { role: newRole, maxUses, expiresInDays } = await request.json().catch(() => ({}));

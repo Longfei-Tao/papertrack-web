@@ -213,6 +213,9 @@
             <input id="f_corresponding_author" maxlength="60" placeholder="例如：李教授（导师）" />
           </label>
         </div>
+        <label>邀请的审稿专家
+          <input id="f_reviewers" maxlength="200" placeholder="例如：王教授、陈博士（多人用顿号或逗号分隔）" />
+        </label>
         <div class="row">
           <label>JCR分区
             <select id="f_quartile">
@@ -278,6 +281,13 @@
         <button class="modal-close" data-close-team>×</button>
       </div>
       <div class="modal-body">
+        <div class="lock-panel hidden" id="lockPanel">
+          <label class="lock-row">
+            <input type="checkbox" id="lockToggle" />
+            <span class="lock-label">设为私密组（仅我可见）</span>
+          </label>
+          <p class="lock-hint">开启后，其他成员将无法查看本组数据，也无法再加入；只有你（创建者）能访问。</p>
+        </div>
         <h3 class="sub-h">成员（<span id="teamMemberCount">0</span>）</h3>
         <div class="users-list" id="membersList"></div>
         <hr class="sep" />

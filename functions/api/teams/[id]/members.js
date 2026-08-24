@@ -2,12 +2,12 @@
 //   GET    /api/teams/:id/members -> 列出成员 [{user_id, display_name, username, role}]（成员可读）
 //   PUT    /api/teams/:id/members -> 修改成员角色 {uid, role}（仅 admin，不能改自己）
 //   DELETE /api/teams/:id/members?uid=xxx -> 移除成员（仅 admin，不能移除自己）
-import { getUser, memberRole, json } from "../../../_lib/auth.js";
+import { getUser, canAccessTeam, json } from "../../../_lib/auth.js";
 
 export async function onRequestGet({ request, env, params }) {
   const u = await getUser(request, env);
   if (!u) return json({ error: "未登录" }, 401);
-  const role = await memberRole(env.DB, u.id, params.id);
+  const role = await canAccessTeam(env.DB, u.id, params.id);
   if (!role) return json({ error: "你不是该课题组成员" }, 403);
 
   const { results } = await env.DB.prepare(
@@ -21,7 +21,7 @@ export async function onRequestGet({ request, env, params }) {
 export async function onRequestPut({ request, env, params }) {
   const u = await getUser(request, env);
   if (!u) return json({ error: "未登录" }, 401);
-  const role = await memberRole(env.DB, u.id, params.id);
+  const role = await canAccessTeam(env.DB, u.id, params.id);
   if (role !== "admin") return json({ error: "需要课题组管理员权限" }, 403);
 
   const body = await request.json().catch(() => ({}));
@@ -44,7 +44,7 @@ export async function onRequestPut({ request, env, params }) {
 export async function onRequestDelete({ request, env, params }) {
   const u = await getUser(request, env);
   if (!u) return json({ error: "未登录" }, 401);
-  const role = await memberRole(env.DB, u.id, params.id);
+  const role = await canAccessTeam(env.DB, u.id, params.id);
   if (role !== "admin") return json({ error: "需要课题组管理员权限" }, 403);
 
   const uid = new URL(request.url).searchParams.get("uid");
@@ -57,4 +57,19 @@ export async function onRequestDelete({ request, env, params }) {
   await env.DB.prepare("DELETE FROM team_members WHERE team_id = ? AND user_id = ?").bind(params.id, uid).run();
   await env.DB.prepare("DELETE FROM sessions WHERE user_id = ?").bind(uid).run();
   return json({ ok: true });
+}
+
+// 锁定 / 解锁课题组（私密组）：仅创建者可操作。
+//   PATCH /api/teams/:id/members  body: { locked: true|false }
+export async function onRequestPatch({ request, env, params }) {
+  const u = await getUser(request, env);
+  if (!u) return json({ error: "未登录" }, 401);
+  const team = await env.DB.prepare("SELECT created_by, locked FROM teams WHERE id = ?").bind(params.id).first();
+  if (!team) return json({ error: "课题组不存在" }, 404);
+  if (team.created_by !== u.id) return json({ error: "只有课题组创建者能设置私密模式" }, 403);
+
+  const { locked } = await request.json().catch(() => ({}));
+  const val = locked ? 1 : 0;
+  await env.DB.prepare("UPDATE teams SET locked = ? WHERE id = ?").bind(val, params.id).run();
+  return json({ ok: true, locked: val });
 }

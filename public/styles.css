@@ -300,6 +300,37 @@ body {
 }
 .sep { border: none; border-top: 1px solid var(--line); margin: 16px 0; }
 .sub-h { margin: 0 0 12px; font-size: 13px; color: var(--muted); font-weight: 600; }
+
+/* 私密模式开关（课题组管理弹窗内，仅创建者可见） */
+.lock-panel {
+  background: var(--primary-subtle);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+.lock-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.lock-row input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+  cursor: pointer;
+  flex: none;
+}
+.lock-hint {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
 .user-form { display: flex; flex-direction: column; gap: 12px; }
 .user-form label { display: flex; flex-direction: column; font-size: 13px; color: var(--muted); gap: 4px; }
 .user-form input, .user-form select {
@@ -574,14 +605,22 @@ body {
 .owner-table tbody tr:last-child td { border-bottom: none; }
 
 /* 列宽：8 列（论文题目/期刊名称/第一作者/通讯作者/JCR分区/投稿进度/最近更新/操作） */
-.owner-table th:nth-child(1), .owner-table td:nth-child(1) { width: 25%; min-width: 220px; }
-.owner-table th:nth-child(2), .owner-table td:nth-child(2) { width: 18%; min-width: 180px; }
-.owner-table th:nth-child(3), .owner-table td:nth-child(3) { width: 9%;  min-width: 88px; }
-.owner-table th:nth-child(4), .owner-table td:nth-child(4) { width: 9%;  min-width: 88px; }
-.owner-table th:nth-child(5), .owner-table td:nth-child(5) { width: 6%;  min-width: 60px; }
-.owner-table th:nth-child(6), .owner-table td:nth-child(6) { width: 12%; min-width: 110px; }
-.owner-table th:nth-child(7), .owner-table td:nth-child(7) { width: 11%; min-width: 92px; }
-.owner-table th:nth-child(8), .owner-table td:nth-child(8) { width: 10%; min-width: 104px; }
+.owner-table th:nth-child(1), .owner-table td:nth-child(1) { width: 24%; min-width: 220px; }
+.owner-table th:nth-child(2), .owner-table td:nth-child(2) { width: 17%; min-width: 170px; }
+.owner-table th:nth-child(3), .owner-table td:nth-child(3) { width: 8%;  min-width: 76px; }
+.owner-table th:nth-child(4), .owner-table td:nth-child(4) { width: 8%;  min-width: 76px; }
+.owner-table th:nth-child(5), .owner-table td:nth-child(5) { width: 10%; min-width: 96px; }
+.owner-table th:nth-child(6), .owner-table td:nth-child(6) { width: 7%;  min-width: 70px; }
+.owner-table th:nth-child(7), .owner-table td:nth-child(7) { width: 11%; min-width: 100px; }
+.owner-table th:nth-child(8), .owner-table td:nth-child(8) { width: 9%;  min-width: 88px; }
+.owner-table th:nth-child(9), .owner-table td:nth-child(9) { width: 6%;  min-width: 76px; }
+
+/* 短内容列居中（投稿进度 / 最近更新 / 操作）—— 让徽章、时间和按钮视觉平衡 */
+.owner-table th:nth-child(7), .owner-table td:nth-child(7),
+.owner-table th:nth-child(8), .owner-table td:nth-child(8),
+.owner-table th:nth-child(9), .owner-table td:nth-child(9) {
+  text-align: center;
+}
 
 .title-cell {
   font-weight: 600;

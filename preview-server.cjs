@@ -30,7 +30,7 @@ const genCode = () => {
 
 function seed() {
   const t = "t1";
-  db.teams.set(t, { id: t, name: "李教授课题组", created_by: "u1", created_at: nowISO() });
+  db.teams.set(t, { id: t, name: "李教授课题组", created_by: "u1", locked: 0, created_at: nowISO() });
   [
     { id: "u1", username: "admin", display_name: "我（组长）", pw: "admin123" },
     { id: "u2", username: "shijie", display_name: "师姐·小王", pw: "shijie123" },
@@ -56,8 +56,18 @@ seed();
 // ---------------- 鉴权辅助 ----------------
 const publicUser = (u) => (u ? { id: u.id, username: u.username, display_name: u.display_name } : null);
 const getUserTeams = (userId) =>
-  db.members.filter((m) => m.user_id === userId).map((m) => ({ id: m.team_id, name: (db.teams.get(m.team_id) || {}).name || "?", role: m.role }));
+  db.members
+    .filter((m) => m.user_id === userId)
+    .map((m) => {
+      const t = db.teams.get(m.team_id) || {};
+      return { id: m.team_id, name: t.name || "?", role: m.role, created_by: t.created_by, locked: t.locked || 0 };
+    })
+    .filter((t) => !t.locked || t.created_by === userId);
 const memberRole = (userId, teamId) => {
+  const t = db.teams.get(teamId);
+  if (!t) return null;
+  if (t.created_by === userId) return "admin";
+  if (t.locked) return null; // 私密组：非创建者拒绝
   const m = db.members.find((x) => x.team_id === teamId && x.user_id === userId);
   return m ? m.role : null;
 };
@@ -223,6 +233,7 @@ const server = http.createServer(async (req, res) => {
         }
         db.papers.set(id, {
           id, team_id: teamId, title: b.title, journal: b.journal || "",
+          first_author: b.first_author || null, corresponding_author: b.corresponding_author || null, reviewers: b.reviewers || null,
           impact_factor: b.impact_factor === "" ? null : (b.impact_factor != null ? Number(b.impact_factor) : null),
           quartile: b.quartile || "待定", status: b.status || "草稿", owner_id: ownerId, owner_name: ownerName,
           submitted_at: b.submitted_at || null, revision_deadline: b.revision_deadline || null, note: b.note || "",
@@ -238,6 +249,7 @@ const server = http.createServer(async (req, res) => {
         const b = await readBody(req);
         Object.assign(p, {
           title: b.title ?? p.title, journal: b.journal ?? p.journal,
+          first_author: b.first_author ?? p.first_author, corresponding_author: b.corresponding_author ?? p.corresponding_author, reviewers: b.reviewers ?? p.reviewers,
           impact_factor: b.impact_factor === "" ? null : (b.impact_factor != null ? Number(b.impact_factor) : p.impact_factor),
           quartile: b.quartile ?? p.quartile, status: b.status ?? p.status,
           submitted_at: b.submitted_at ?? p.submitted_at, revision_deadline: b.revision_deadline ?? p.revision_deadline,
@@ -284,6 +296,13 @@ const server = http.createServer(async (req, res) => {
         if (idx >= 0) db.members.splice(idx, 1);
         [...db.papers.values()].forEach((p) => { if (p.team_id === teamId && p.owner_id === uidDel) { p.owner_id = null; p.owner_name = "(已移除)"; } });
         return send(res, 200, { ok: true });
+      }
+      if (req.method === "PATCH") {
+        const t = db.teams.get(teamId);
+        if (!t || t.created_by !== user.id) return send(res, 403, { error: "只有创建者能设置私密模式" });
+        const b = await readBody(req);
+        t.locked = b.locked ? 1 : 0;
+        return send(res, 200, { ok: true, locked: t.locked });
       }
     }
     // ---- team invites ----

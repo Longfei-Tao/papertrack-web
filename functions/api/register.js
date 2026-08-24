@@ -86,6 +86,10 @@ export async function onRequestPost({ request, env }) {
     if (inv.expires_at && inv.expires_at < Date.now()) return json({ error: "邀请码已过期" }, 400);
     if (inv.max_uses != null && inv.used_count >= inv.max_uses) return json({ error: "邀请码使用次数已达上限" }, 400);
 
+    // 私密组（locked）：即使邀请码有效，也不接受新成员加入
+    const team = await db.prepare("SELECT locked FROM teams WHERE id = ?").bind(inv.team_id).first();
+    if (team && team.locked) return json({ error: "该课题组已设为私密，暂不接受新成员加入" }, 403);
+
     await db
       .prepare("INSERT INTO team_members (team_id, user_id, role, joined_at) VALUES (?, ?, ?, ?)")
       .bind(inv.team_id, userId, inv.role || "member", now)

@@ -84,18 +84,36 @@ export async function memberRole(db, userId, teamId) {
   return row ? row.role : null;
 }
 
-// 列出某用户加入的所有团队 [{id, name, role}]
+// 访问控制：是否允许某用户访问某课题组（考虑"私密组"锁定）。
+// 返回 'admin' / 'member' / null（null = 无权限）。
+//   - 创建者：永远可访问，视为 admin
+//   - 组被锁定（locked=1）：非创建者一律拒绝
+//   - 否则：返回其在 team_members 中的实际角色
+export async function canAccessTeam(db, userId, teamId) {
+  if (!userId || !teamId) return null;
+  const team = await db
+    .prepare("SELECT created_by, locked FROM teams WHERE id = ?")
+    .bind(teamId)
+    .first();
+  if (!team) return null;
+  if (team.created_by === userId) return "admin";
+  if (team.locked) return null;
+  return memberRole(db, userId, teamId);
+}
+
+// 列出某用户加入的所有团队 [{id, name, role, created_by, locked}]
+// 私密组（locked=1）对非创建者隐藏：他们登录后看不到也进不去。
 export async function getUserTeams(db, userId) {
   const { results } = await db
     .prepare(
-      `SELECT t.id, t.name, m.role
+      `SELECT t.id, t.name, m.role, t.created_by, t.locked
          FROM team_members m JOIN teams t ON t.id = m.team_id
         WHERE m.user_id = ?
         ORDER BY m.joined_at`
     )
     .bind(userId)
     .all();
-  return results || [];
+  return (results || []).filter((t) => !t.locked || t.created_by === userId);
 }
 
 // 登录成功后：建会话并返回 { token, user, teams }
