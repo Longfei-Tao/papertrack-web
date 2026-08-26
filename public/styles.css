@@ -604,21 +604,24 @@ body {
 .owner-table { border-collapse: collapse; }
 .owner-table tbody tr:last-child td { border-bottom: none; }
 
-/* 列宽：8 列（论文题目/期刊名称/第一作者/通讯作者/JCR分区/投稿进度/最近更新/操作） */
-.owner-table th:nth-child(1), .owner-table td:nth-child(1) { width: 24%; min-width: 220px; }
-.owner-table th:nth-child(2), .owner-table td:nth-child(2) { width: 17%; min-width: 170px; }
-.owner-table th:nth-child(3), .owner-table td:nth-child(3) { width: 8%;  min-width: 76px; }
-.owner-table th:nth-child(4), .owner-table td:nth-child(4) { width: 8%;  min-width: 76px; }
-.owner-table th:nth-child(5), .owner-table td:nth-child(5) { width: 10%; min-width: 96px; }
-.owner-table th:nth-child(6), .owner-table td:nth-child(6) { width: 7%;  min-width: 70px; }
-.owner-table th:nth-child(7), .owner-table td:nth-child(7) { width: 11%; min-width: 100px; }
-.owner-table th:nth-child(8), .owner-table td:nth-child(8) { width: 9%;  min-width: 88px; }
-.owner-table th:nth-child(9), .owner-table td:nth-child(9) { width: 6%;  min-width: 76px; }
+/* 列宽：10 列（论文题目/期刊名称/第一作者/通讯作者/审稿专家/JCR分区/中科院分区/投稿进度/最近更新/操作） */
+/* 论文题目、期刊名称两列加宽（内容可能较长）；其余 8 列等宽，整齐一致 */
+.owner-table th:nth-child(1), .owner-table td:nth-child(1) { width: 28%; min-width: 240px; }
+.owner-table th:nth-child(2), .owner-table td:nth-child(2) { width: 20%; min-width: 190px; }
+.owner-table th:nth-child(3), .owner-table td:nth-child(3) { width: 6.5%; min-width: 84px; }
+.owner-table th:nth-child(4), .owner-table td:nth-child(4) { width: 6.5%; min-width: 84px; }
+.owner-table th:nth-child(5), .owner-table td:nth-child(5) { width: 6.5%; min-width: 84px; }
+.owner-table th:nth-child(6), .owner-table td:nth-child(6) { width: 6.5%; min-width: 84px; }
+.owner-table th:nth-child(7), .owner-table td:nth-child(7) { width: 6.5%; min-width: 84px; }
+.owner-table th:nth-child(8), .owner-table td:nth-child(8) { width: 6.5%; min-width: 84px; }
+.owner-table th:nth-child(9), .owner-table td:nth-child(9) { width: 6.5%; min-width: 84px; }
+.owner-table th:nth-child(10), .owner-table td:nth-child(10) { width: 6.5%; min-width: 84px; }
 
-/* 短内容列居中（投稿进度 / 最近更新 / 操作）—— 让徽章、时间和按钮视觉平衡 */
+/* 短内容列居中（中科院分区 / 投稿进度 / 最近更新 / 操作）—— 让徽章、时间和按钮视觉平衡 */
 .owner-table th:nth-child(7), .owner-table td:nth-child(7),
 .owner-table th:nth-child(8), .owner-table td:nth-child(8),
-.owner-table th:nth-child(9), .owner-table td:nth-child(9) {
+.owner-table th:nth-child(9), .owner-table td:nth-child(9),
+.owner-table th:nth-child(10), .owner-table td:nth-child(10) {
   text-align: center;
 }
 
@@ -674,6 +677,23 @@ body {
 .q-badge.q-Q2 { background: #fbeed5; color: #8a5a00; }
 .q-badge.q-Q3 { background: #f6e6d8; color: #9c5326; }
 .q-badge.q-Q4 { background: #f1dede; color: #8f2f2f; }
+
+/* 中科院分区徽章：与 JCR 分区（q-badge）并列，配色按一二三四区从优到次渐变 */
+.c-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  background: #efe9e5;
+  color: #6f6770;
+  white-space: nowrap;
+}
+.c-badge.c-一区 { background: var(--good-subtle); color: #166534; }
+.c-badge.c-二区 { background: #e7eefc; color: #1e40af; }
+.c-badge.c-三区 { background: #f6e6d8; color: #9c5326; }
+.c-badge.c-四区 { background: #f1dede; color: #8f2f2f; }
 
 .op-col { text-align: left !important; }
 .row-op { display: inline-flex; gap: 8px; align-items: center; }

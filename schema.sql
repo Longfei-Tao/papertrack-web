@@ -69,7 +69,8 @@ CREATE TABLE IF NOT EXISTS papers (
   corresponding_author TEXT,                -- 通讯作者（2026-08 新增）
   reviewers         TEXT,                   -- 邀请的审稿专家（多人用顿号/逗号分隔，2026-08 新增）
   impact_factor     REAL,                   -- 影响因子 IF（界面已隐藏，数据保留）
-  quartile          TEXT,                   -- 分区：Q1 / Q2 / Q3 / Q4 / 待定
+  quartile          TEXT,                   -- JCR分区：Q1 / Q2 / Q3 / Q4 / 待定
+  cas_quartile      TEXT,                   -- 中科院分区：一区 / 二区 / 三区 / 四区 / 待定
   status            TEXT,                   -- 投稿进度（SCI 流程：草稿/已投稿/编辑处理中/审稿中/决定中/返修/接收/拒稿/已发表）
   owner_id          TEXT,                   -- 归属用户 id（谁的文章）
   owner_name        TEXT,                   -- 归属用户显示名（冗余，便于展示）
@@ -105,6 +106,7 @@ CREATE INDEX IF NOT EXISTS idx_psl_team  ON paper_status_log(team_id);
 -- ALTER TABLE papers ADD COLUMN first_author TEXT;
 -- ALTER TABLE papers ADD COLUMN corresponding_author TEXT;
 -- ALTER TABLE papers ADD COLUMN reviewers TEXT;
+-- ALTER TABLE papers ADD COLUMN cas_quartile TEXT;
 -- ALTER TABLE teams ADD COLUMN locked INTEGER NOT NULL DEFAULT 0;
 -- CREATE TABLE IF NOT EXISTS paper_status_log (
 --   id TEXT PRIMARY KEY, paper_id TEXT NOT NULL, team_id TEXT NOT NULL,

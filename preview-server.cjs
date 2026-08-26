@@ -41,11 +41,11 @@ function seed() {
   db.members.push({ team_id: t, user_id: "u3", role: "member", joined_at: nowISO() });
   db.invites.set("i1", { id: "i1", team_id: t, code: "LIKEY888", role: "member", max_uses: null, used_count: 0, expires_at: null, active: 1, created_by: "u1", created_at: nowISO() });
   [
-    { title: "基于机器学习的某护理干预研究", journal: "Journal of Advanced Nursing", impact_factor: 3.8, quartile: "Q1", status: "审稿中", owner_id: "u1", owner_name: "我（组长）", submitted_at: "2026-05-10", revision_deadline: null },
-    { title: "老年跌倒风险评估模型构建", journal: "International Journal of Nursing Studies", impact_factor: 5.2, quartile: "Q1", status: "返修", owner_id: "u2", owner_name: "师姐·小王", submitted_at: "2026-03-01", revision_deadline: "2026-08-10" },
-    { title: "营养支持对术后恢复的影响", journal: "Clinical Nutrition", impact_factor: 7.1, quartile: "Q1", status: "接收", owner_id: "u2", owner_name: "师姐·小王", submitted_at: "2025-11-20", revision_deadline: null },
-    { title: "某慢病管理综述", journal: "Nursing Outlook", impact_factor: 2.9, quartile: "Q2", status: "已发表", owner_id: "u3", owner_name: "师妹·小李", submitted_at: "2025-06-15", revision_deadline: null },
-    { title: "移动健康在高血压管理中的应用", journal: "JMIR mHealth", impact_factor: 4.5, quartile: "Q2", status: "草稿", owner_id: "u1", owner_name: "我（组长）", submitted_at: null, revision_deadline: null },
+    { title: "基于机器学习的某护理干预研究", journal: "Journal of Advanced Nursing", impact_factor: 3.8, quartile: "Q1", cas_quartile: "二区", status: "审稿中", owner_id: "u1", owner_name: "我（组长）", submitted_at: "2026-05-10", revision_deadline: null },
+    { title: "老年跌倒风险评估模型构建", journal: "International Journal of Nursing Studies", impact_factor: 5.2, quartile: "Q1", cas_quartile: "一区", status: "返修", owner_id: "u2", owner_name: "师姐·小王", submitted_at: "2026-03-01", revision_deadline: "2026-08-10" },
+    { title: "营养支持对术后恢复的影响", journal: "Clinical Nutrition", impact_factor: 7.1, quartile: "Q1", cas_quartile: "一区", status: "接收", owner_id: "u2", owner_name: "师姐·小王", submitted_at: "2025-11-20", revision_deadline: null },
+    { title: "某慢病管理综述", journal: "Nursing Outlook", impact_factor: 2.9, quartile: "Q2", cas_quartile: "三区", status: "已发表", owner_id: "u3", owner_name: "师妹·小李", submitted_at: "2025-06-15", revision_deadline: null },
+    { title: "移动健康在高血压管理中的应用", journal: "JMIR mHealth", impact_factor: 4.5, quartile: "Q2", cas_quartile: "三区", status: "草稿", owner_id: "u1", owner_name: "我（组长）", submitted_at: null, revision_deadline: null },
   ].forEach((p) => {
     const id = uid("p");
     db.papers.set(id, Object.assign({ id, team_id: t, created_at: nowISO(), updated_at: nowISO(), note: "" }, p));
@@ -212,9 +212,9 @@ const server = http.createServer(async (req, res) => {
         const b = await readBody(req);
         if (b.action === "sample") {
           const samples = [
-            { title: "示例论文 A：某干预效果随机对照试验", journal: "Sample Journal A", impact_factor: 4.2, quartile: "Q1", status: "审稿中", revision_deadline: null },
-            { title: "示例论文 B：横断面调查研究", journal: "Sample Journal B", impact_factor: 3.1, quartile: "Q2", status: "返修", revision_deadline: "2026-08-15" },
-            { title: "示例论文 C：系统综述与荟萃分析", journal: "Sample Journal C", impact_factor: 6.0, quartile: "Q1", status: "接收", revision_deadline: null },
+            { title: "示例论文 A：某干预效果随机对照试验", journal: "Sample Journal A", impact_factor: 4.2, quartile: "Q1", cas_quartile: "一区", status: "审稿中", revision_deadline: null },
+            { title: "示例论文 B：横断面调查研究", journal: "Sample Journal B", impact_factor: 3.1, quartile: "Q2", cas_quartile: "三区", status: "返修", revision_deadline: "2026-08-15" },
+            { title: "示例论文 C：系统综述与荟萃分析", journal: "Sample Journal C", impact_factor: 6.0, quartile: "Q1", cas_quartile: "二区", status: "接收", revision_deadline: null },
           ];
           let count = 0;
           samples.forEach((s) => { const id = uid("p"); db.papers.set(id, Object.assign({ id, team_id: teamId, owner_id: user.id, owner_name: user.display_name, submitted_at: "2026-04-01", created_at: nowISO(), updated_at: nowISO(), note: "" }, s)); count++; });
@@ -235,7 +235,7 @@ const server = http.createServer(async (req, res) => {
           id, team_id: teamId, title: b.title, journal: b.journal || "",
           first_author: b.first_author || null, corresponding_author: b.corresponding_author || null, reviewers: b.reviewers || null,
           impact_factor: b.impact_factor === "" ? null : (b.impact_factor != null ? Number(b.impact_factor) : null),
-          quartile: b.quartile || "待定", status: b.status || "草稿", owner_id: ownerId, owner_name: ownerName,
+          quartile: b.quartile || "待定", cas_quartile: b.cas_quartile || "待定", status: b.status || "草稿", owner_id: ownerId, owner_name: ownerName,
           submitted_at: b.submitted_at || null, revision_deadline: b.revision_deadline || null, note: b.note || "",
           created_at: nowISO(), updated_at: nowISO(),
         });
@@ -251,7 +251,7 @@ const server = http.createServer(async (req, res) => {
           title: b.title ?? p.title, journal: b.journal ?? p.journal,
           first_author: b.first_author ?? p.first_author, corresponding_author: b.corresponding_author ?? p.corresponding_author, reviewers: b.reviewers ?? p.reviewers,
           impact_factor: b.impact_factor === "" ? null : (b.impact_factor != null ? Number(b.impact_factor) : p.impact_factor),
-          quartile: b.quartile ?? p.quartile, status: b.status ?? p.status,
+          quartile: b.quartile ?? p.quartile, cas_quartile: b.cas_quartile ?? p.cas_quartile, status: b.status ?? p.status,
           submitted_at: b.submitted_at ?? p.submitted_at, revision_deadline: b.revision_deadline ?? p.revision_deadline,
           note: b.note ?? p.note, updated_at: nowISO(),
         });

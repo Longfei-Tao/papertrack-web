@@ -523,6 +523,12 @@ function qBadge(q) {
   const cls = VALID_Q.includes(q) ? "q-badge q-" + q : "q-badge";
   return `<span class="${cls}">${esc(q || "—")}</span>`;
 }
+// 中科院分区徽章：与 JCR 分区并列展示，白名单外的值不拼进 class
+function casBadge(q) {
+  const VALID_C = ["一区", "二区", "三区", "四区", "待定"];
+  const cls = VALID_C.includes(q) ? "c-badge c-" + q : "c-badge";
+  return `<span class="${cls}">${esc(q || "—")}</span>`;
+}
 
 function canEdit(p) {
   if (!state.user) return false;
@@ -588,11 +594,12 @@ function renderBoards() {
             <td data-label="通讯作者">${esc(p.corresponding_author || "—")}</td>
             <td data-label="审稿专家">${esc(p.reviewers || "—")}</td>
             <td data-label="JCR分区">${qBadge(p.quartile)}</td>
+            <td data-label="中科院分区">${casBadge(p.cas_quartile)}</td>
             <td data-label="投稿进度">${badge(p.status)}</td>
             <td data-label="最近更新">${relTime(p.updated_at)}</td>
             <td class="op-col" data-label="操作">${op}</td>
           </tr>
-          <tr class="log-row"><td colspan="9">${logHtml}</td></tr>`;
+          <tr class="log-row"><td colspan="10">${logHtml}</td></tr>`;
         })
         .join("");
       // 小框头部"添加论文"：本人可见；管理员对任意成员的小框都可见
@@ -617,6 +624,7 @@ function renderBoards() {
               <th>通讯作者</th>
               <th>审稿专家</th>
               <th>JCR分区</th>
+              <th>中科院分区</th>
               <th>投稿进度</th>
               <th>最近更新</th>
               <th class="op-col">操作</th>
@@ -717,6 +725,7 @@ function openModal(record, ownerId, ownerName) {
   $("f_corresponding_author").value = record ? (record.corresponding_author || "") : "";
   $("f_reviewers").value = record ? (record.reviewers || "") : "";
   $("f_quartile").value = record ? record.quartile || "待定" : "待定";
+  $("f_cas_quartile").value = record ? record.cas_quartile || "待定" : "待定";
   $("f_status").value = record ? record.status || "草稿" : "草稿";
   $("f_status_note").value = "";
   $("f_owner").value = state.targetOwnerName || "";
@@ -965,6 +974,7 @@ async function submitPaper(e) {
     corresponding_author: $("f_corresponding_author").value.trim(),
     reviewers: $("f_reviewers").value.trim(),
     quartile: $("f_quartile").value,
+    cas_quartile: $("f_cas_quartile").value,
     status: $("f_status").value,
     status_note: $("f_status_note").value.trim(),
     note: $("f_note").value.trim(),
