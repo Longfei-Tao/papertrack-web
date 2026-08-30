@@ -559,6 +559,12 @@ body {
 
 /* ---------- 每人独立小框（按负责人分组） ---------- */
 .boards { display: flex; flex-direction: column; gap: 18px; }
+/* 看板内容更新（筛选 / 搜索 / 切换 / 增删）时：淡入 + 轻微上移，去掉"硬切"的顿挫感 */
+@keyframes boardIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.boards-anim { animation: boardIn var(--motion); }
 .board-empty {
   background: var(--surface); border: 1px solid var(--line);
   border-radius: var(--radius-lg); padding: 44px 24px;
@@ -569,6 +575,9 @@ body {
   background: var(--surface); border: 1px solid var(--line);
   border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: hidden;
   transition: transform var(--motion), box-shadow var(--motion), border-color var(--motion);
+  /* 长列表优化：屏幕外的卡片跳过渲染，滚动更顺（仅作渐进增强，屏幕内无感） */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 160px;
 }
 .owner-card:hover { transform: translateY(-1px); box-shadow: 0 8px 24px -4px rgb(15 23 42 / 0.10); }
 .owner-card.is-me { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary), var(--shadow); }

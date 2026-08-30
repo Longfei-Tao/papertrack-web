@@ -9,6 +9,7 @@ const state = {
   papers: [],          // 本组全部论文（原始）
   members: [],         // 本组成员（课题组管理 / 使用情况用）
   filtered: [],        // 过滤/排序后的论文
+  openLogs: new Set(),   // 已展开的「进度时间线」对应的论文 id（重渲染后自动恢复，避免一筛选就收起）
   token: localStorage.getItem("pt_token") || "",
   user: null,                // {id, username, display_name}
   teams: [],                 // [{id, name, role}]
@@ -344,11 +345,11 @@ async function loadPapers() {
     state.papers = [];
     toast("加载失败：" + e.message);
   }
-  applyFilters();
+  render();
 }
 
 // ---------- 渲染 ----------
-function render() { renderStats(); renderFilterBar(); renderBoards(); }
+function render() { renderFilterBar(); applyFilters(); }
 
 function renderStats() {
   const p = state.filtered;
@@ -362,7 +363,7 @@ function renderStats() {
 }
 
 // 多维组合过滤 + 排序（前端本地完成，课题组数据量很小）
-function applyFilters() {
+function computeFiltered() {
   const q = $("searchInput").value.trim().toLowerCase();
   const f = state.filters;
 
@@ -387,7 +388,14 @@ function applyFilters() {
   });
 
   state.filtered = out;
-  render();
+}
+
+// 多维组合过滤 + 排序（前端本地完成，课题组数据量很小）
+// 快速路径：只刷新看板 + 统计，不再重建筛选栏（避免丢焦点、减少重排）
+function applyFilters() {
+  computeFiltered();
+  renderStats();
+  renderBoards();
 }
 
 // 已选条件的小标签（显示在触发按钮上）
@@ -547,6 +555,7 @@ function renderBoards() {
     boards.innerHTML = `<div class="board-empty">暂无数据。登录后点「载入示例数据」或「添加论文」。${
       state.papers.length ? "（当前筛选条件下没有匹配的论文）" : ""
     }</div>`;
+    animateBoards();
     return;
   }
   // 分组
@@ -635,6 +644,28 @@ function renderBoards() {
       </div>`;
     })
     .join("");
+
+  // 恢复已展开的「进度时间线」（避免一筛选就自动收起）
+  if (state.openLogs.size) {
+    boards.querySelectorAll(".status-log").forEach((el) => {
+      const id = el.getAttribute("data-log");
+      if (id && state.openLogs.has(id)) {
+        el.classList.add("open");
+        const body = el.parentElement.querySelector(".status-log-body");
+        if (body) body.classList.remove("hidden");
+      }
+    });
+  }
+  animateBoards();
+}
+
+// 看板内容更新后的「淡入 + 轻微上移」过渡：让筛选 / 搜索 / 切换 / 增删更丝滑，去掉硬切的顿挫感
+function animateBoards() {
+  const b = $("boards");
+  if (!b) return;
+  b.classList.remove("boards-anim");
+  void b.offsetWidth; // 强制重排以重启动画
+  b.classList.add("boards-anim");
 }
 
 // ---------- 无障碍：弹窗焦点管理 ----------
@@ -1130,6 +1161,11 @@ function bind() {
       const body = logTrigger.parentElement.querySelector(".status-log-body");
       if (body) body.classList.toggle("hidden");
       logTrigger.classList.toggle("open");
+      const lid = logTrigger.getAttribute("data-log");
+      if (lid) {
+        if (logTrigger.classList.contains("open")) state.openLogs.add(lid);
+        else state.openLogs.delete(lid);
+      }
       return;
     }
     const ed = e.target.getAttribute("data-edit");
