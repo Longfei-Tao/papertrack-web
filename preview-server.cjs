@@ -6,7 +6,7 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 
-const PORT = 4173;
+const PORT = Number(process.env.PORT || 4173);
 const PUBLIC = path.join(__dirname, "public");
 
 // ---------------- 内存数据库 ----------------
@@ -328,4 +328,5 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, () => console.log("PaperTrack 预览已启动： http://localhost:" + PORT));
+// 演示账号和内存数据库仅供本机预览，不向局域网开放。
+server.listen(PORT, '127.0.0.1', () => console.log("PaperTrack 预览已启动： http://127.0.0.1:" + server.address().port));

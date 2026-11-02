@@ -7,7 +7,15 @@
     "preview": "node preview-server.cjs",
     "test": "node tests/e2e.cjs"
   },
-  "keywords": ["paper", "tracking", "research", "xiamen-university"],
+  "keywords": [
+    "paper",
+    "tracking",
+    "research",
+    "xiamen-university"
+  ],
   "license": "MIT",
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "jsdom": "^26.1.0"
+  }
 }

@@ -5,8 +5,7 @@ const { spawn } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 
-const PORT = 4173;
-const BASE = `http://localhost:${PORT}`;
+let BASE;
 
 let server;
 let pass = 0;
@@ -17,25 +16,27 @@ function log(msg) { console.log(`[TEST] ${msg}`); }
 
 async function startServer() {
   return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error('预览服务在 10 秒内未就绪')), 10000);
     server = spawn(process.execPath, [path.join(__dirname, "..", "preview-server.cjs")], {
       cwd: path.join(__dirname, ".."),
       stdio: "pipe",
+      env: { ...process.env, PORT: '0' },
     });
-    server.on("error", reject);
+    server.on("error", (error) => { clearTimeout(timeout); reject(error); });
+    server.on("exit", (code) => { clearTimeout(timeout); reject(new Error(`预览服务提前退出：${code}`)); });
     server.stderr.on("data", (d) => console.error("[SERVER] " + d.toString().trim()));
-
-    const check = () => {
-      fetch(`${BASE}/`).then((r) => {
-        if (r.status === 200) return resolve();
-        setTimeout(check, 200);
-      }).catch(() => setTimeout(check, 200));
-    };
-    setTimeout(check, 300);
+    let output = '';
+    server.stdout.on('data', (data) => {
+      output = (output + data.toString()).slice(-2000);
+      const match = output.match(/http:\/\/127\.0\.0\.1:\d+/);
+      if (match) { BASE = match[0]; clearTimeout(timeout); resolve(); }
+    });
   });
 }
 
 function stopServer() {
   return new Promise((resolve) => {
+    if (!server || server.exitCode !== null) return resolve();
     server.on("close", resolve);
     server.kill();
     setTimeout(() => { try { server.kill("SIGKILL"); } catch (e) {} }, 2000);
